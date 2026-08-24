@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2cda0865bc8edb049adcc29e8e00f720, type: 3}
+  m_Name: PotOfGreed
+  m_EditorClassIdentifier: Assembly-CSharp::SpellCardSO
+  id: 3
+  cardName: "Pote da gan\xE2ncia"
+  cardType: 1
+  description: Draw 2 cards
+  events:
+  - rid: 6788584317569990739
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 6788584317569990739
+      type: {class: CardEvent, ns: , asm: Assembly-CSharp}
+      data:
+        trigger: 12
+        effects:
+          rid: 6788584317569990740
+        cost:
+          rid: -2
+        conditions:
+        - rid: 6788584317569990741
+        isOptional: 0
+        effectType: 1
+    - rid: 6788584317569990740
+      type: {class: DrawCardNode, ns: , asm: Assembly-CSharp}
+      data:
+        nextEffect:
+          rid: -2
+        cardSubject: 
+        drawNumber: 2
+    - rid: 6788584317569990741
+      type: {class: IsOnHandCondition, ns: , asm: Assembly-CSharp}
+      data: 

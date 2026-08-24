@@ -1,0 +1,57 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76d630fbdaff13b45ad9fef7a1a316ad, type: 3}
+  m_Name: Elf
+  m_EditorClassIdentifier: Assembly-CSharp::MonsterCardSO
+  id: 1
+  cardName: Elf
+  cardType: 0
+  description: "Compre 1 carta. voce s\xF3 pode usar esse efito uma vez por turno."
+  events:
+  - rid: 6788584277533261912
+  starLevel: 2
+  atk: 2
+  hp: 2
+  moveRange: 01000000ffffffff0a000000f6ffffff
+  atkRange: 01000000ffffffff0a000000f6ffffff
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 6788584277533261912
+      type: {class: CardEvent, ns: , asm: Assembly-CSharp}
+      data:
+        trigger: 12
+        effects:
+          rid: 6788584277533261917
+        cost:
+          rid: -2
+        conditions:
+        - rid: 6788584277533261913
+        - rid: 6788584277533261914
+        isOptional: 0
+        effectType: 1
+    - rid: 6788584277533261913
+      type: {class: IsOnFieldCondition, ns: , asm: Assembly-CSharp}
+      data: 
+    - rid: 6788584277533261914
+      type: {class: HardOncePerTurnCondition, ns: , asm: Assembly-CSharp}
+      data:
+        currentEventId: 0
+    - rid: 6788584277533261917
+      type: {class: DrawCardNode, ns: , asm: Assembly-CSharp}
+      data:
+        nextEffect:
+          rid: -2
+        cardSubject: 
+        drawNumber: 1
