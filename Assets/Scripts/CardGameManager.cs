@@ -6,6 +6,7 @@ using NUnit.Framework;
 using Unity.Netcode;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.LightTransport;
 using UnityEngine.SceneManagement;
 using static UnityEngine.UI.GridLayoutGroup;
 
@@ -61,6 +62,26 @@ public class CardGameManager : MonoBehaviour{
         },
     };
 
+    public CardEvent setCardEvent = new() {
+        effectType = EffectTypes.doesNotStartChain,
+        effects = new SelectTileOnYourFieldNode {
+            nextEffect = new SetCardNode {
+                cardSubject = "Source TargetTile"
+            }
+        },
+        conditions = new List<EventCondition> { new IsOnHandCondition() }
+    };
+
+    public CardEvent placeSpellTrapCardEvent = new() {
+        effectType = EffectTypes.doesNotStartChain,
+        effects = new SelectTileOnYourFieldNode {
+            nextEffect = new PlaceSpellTrapCardOnFieldNode {
+                cardSubject = "Source TargetTile",
+                nextEffect = new ActivateCardEventFromDataNode { cardSubject = "eventIndex" }
+            }
+        },
+    };
+
     [SerializeField] private GameObject Card;
     [SerializeField] private GameObject Tile;
 
@@ -82,7 +103,17 @@ public class CardGameManager : MonoBehaviour{
             },
             conditions = new List<EventCondition> { new IsCardLevelEqualOrLowerThanManaCondition(), new IsOnHandCondition() }
         };
-        
+
+        placeSpellTrapCardEvent = new() {
+            effectType = EffectTypes.doesNotStartChain,
+            effects = new SelectTileOnYourFieldNode {
+                nextEffect = new PlaceSpellTrapCardOnFieldNode {
+                    cardSubject = "Source TargetTile",
+                    nextEffect = new ActivateCardEventFromDataNode { cardSubject = "eventIndex" }
+                }
+            },
+        };
+
     }
 
     private void Start() {
@@ -111,6 +142,7 @@ public class CardGameManager : MonoBehaviour{
             newCard.Define(cardSO);
             newCard.name = cardSO.name + (deck1.Count + deck2.Count);
             newCard.cardId = deck1.Count + deck2.Count + 1;
+            newCard.instanceId = (deck1.Count + deck2.Count + 1)*100;
             newCard.Owner = player1;
             newCard.SetupCard();
             newCard.GetComponent<CardVisual>().SetUp(newCard);
@@ -124,6 +156,7 @@ public class CardGameManager : MonoBehaviour{
             newCard.Define(cardSO);
             newCard.name = cardSO.name + (deck1.Count + deck2.Count + 1);
             newCard.cardId = deck1.Count + deck2.Count + 1;
+            newCard.instanceId = (deck1.Count + deck2.Count + 1) * 100;
             newCard.Owner = player2;
             newCard.SetupCard();
             newCard.GetComponent<CardVisual>().SetUp(newCard);
@@ -184,6 +217,7 @@ public class CardGameManager : MonoBehaviour{
             newCard.Define(cardSO);
             newCard.name = cardSO.name + (deck1.Count + deck2.Count + 1);
             newCard.cardId = deck1.Count + deck2.Count + 1;
+            newCard.instanceId = (deck1.Count + deck2.Count + 1) * 100;
             newCard.Owner = player1;
             newCard.SetupCard();
             newCard.GetComponent<CardVisual>().SetUp(newCard);
@@ -197,6 +231,7 @@ public class CardGameManager : MonoBehaviour{
             newCard.Define(cardSO);
             newCard.name = cardSO.name + (deck1.Count + deck2.Count + 1);
             newCard.cardId = deck1.Count + deck2.Count + 1;
+            newCard.instanceId = (deck1.Count + deck2.Count + 1) * 100;
             newCard.Owner = player2;
             newCard.SetupCard();
             newCard.GetComponent<CardVisual>().SetUp(newCard);
@@ -279,7 +314,10 @@ public class CardGameManager : MonoBehaviour{
         for (int collum = 0; collum < 5; collum++) {
             for (int row = 0; row < 5; row++) {
                 Tile tile = field[row, collum];
-                if (tile.cardOnTile == card) {
+                if (tile.monsterOnTile == card) {
+                    return true;
+                }
+                if (tile.spellTrapOnTile == card) {
                     return true;
                 }
             }
@@ -292,7 +330,10 @@ public class CardGameManager : MonoBehaviour{
         for (int collum = 0; collum < 5; collum++) {
             for (int row = 0; row < 5; row++) {
                 Tile tile = field[row, collum];
-                if (tile.cardOnTile == card) {
+                if (tile.monsterOnTile == card) {
+                    return tile;
+                }
+                if (tile.spellTrapOnTile == card) {
                     return tile;
                 }
             }
@@ -337,8 +378,11 @@ public class CardGameManager : MonoBehaviour{
             if(card.cardId == cardId) return card;
         }
         foreach(Tile tile in field) {
-            if (tile.cardOnTile != null) { 
-                if (tile.cardOnTile.cardId == cardId) return tile.cardOnTile;
+            if (tile.monsterOnTile != null) { 
+                if (tile.monsterOnTile.cardId == cardId) return tile.monsterOnTile;
+            }
+            if (tile.spellTrapOnTile != null) { 
+                if (tile.spellTrapOnTile.cardId == cardId) return tile.spellTrapOnTile;
             }
         }
         return null;
@@ -394,11 +438,10 @@ public class CardGameManager : MonoBehaviour{
         }
 
         foreach(Tile tile in field) {
-            if(tile.cardOnTile != null) {
-                MonsterCardData monsterCardData = (MonsterCardData)tile.cardOnTile.cardData;
+            if(tile.monsterOnTile != null) {
+                MonsterCardData monsterCardData = (MonsterCardData)tile.monsterOnTile.cardData;
                 monsterCardData.movequant = 1;
                 monsterCardData.atkquant = 1;
-                tile.cardOnTile.activatedEventsInstance.Clear();
             }
         }
 
@@ -409,7 +452,6 @@ public class CardGameManager : MonoBehaviour{
     }
 
     public void DefineInitialTurnPlayer(ulong playerId) {
-        Debug.Log(player1);
         if (playerId == player1.id) {
             turnPlayer = player1;
         } else {
@@ -419,7 +461,7 @@ public class CardGameManager : MonoBehaviour{
     }
 
     public int GetEventIndex(int cardId, CardEvent cardEvent) {
-        
+
         int eventIndex = GetCardFromLocalId(cardId).GetCardSO().events.IndexOf(cardEvent);
         if (eventIndex == -1) {
             if(cardEvent == normalSummonCardEvent) {
@@ -431,11 +473,35 @@ public class CardGameManager : MonoBehaviour{
             if(cardEvent == atkCardEvent) {
                 eventIndex = 97;
             }
-            if(cardEvent == atkPlayerCardEvent) {
+            if (cardEvent == atkPlayerCardEvent) {
                 eventIndex = 96;
+            }
+            if (cardEvent == setCardEvent) {
+                eventIndex = 95;
+            }
+            if (cardEvent == placeSpellTrapCardEvent) {
+                eventIndex = 94;
             }
         }
         return eventIndex;
+    }
+
+    public CardEvent GetEventById(int eventId, Card card) {
+        if (eventId == 99) {
+            return normalSummonCardEvent;
+        } else if (eventId == 98) {
+            return moveCardEvent;
+        } else if (eventId == 97) {
+            return atkCardEvent;
+        } else if (eventId == 96) {
+            return atkPlayerCardEvent;
+        } else if (eventId == 95) {
+            return setCardEvent;
+        } else if (eventId == 94) {
+            return placeSpellTrapCardEvent;
+        }else {
+            return card.GetCardSO().events[eventId];
+        }
     }
 
     public void RemoveCard(Card card) {
@@ -464,8 +530,12 @@ public class CardGameManager : MonoBehaviour{
             return;
         }
         foreach(Tile tile in field) {
-            if (tile.cardOnTile == card) {
-                tile.cardOnTile = null;
+            if (tile.monsterOnTile == card) {
+                tile.monsterOnTile = null;
+                return;
+            }
+            if (tile.spellTrapOnTile == card) {
+                tile.spellTrapOnTile = null;
                 return;
             }
         }
@@ -491,16 +561,19 @@ public class CardGameManager : MonoBehaviour{
             card.GetComponent<CardVisual>().UpdateBorder();
         }
         foreach (Tile tile in field) {
-            if (tile.cardOnTile != null) {
-                tile.cardOnTile.GetComponent<CardVisual>().UpdateBorder();
+            if (tile.monsterOnTile != null) {
+                tile.monsterOnTile.GetComponent<CardVisual>().UpdateBorder();
+            }
+            if (tile.spellTrapOnTile != null) {
+                tile.spellTrapOnTile.GetComponent<CardVisual>().UpdateBorder();
             }
         }
     }
 
     public bool IsThereOponentCardInRange(List<int> range) {
         foreach(Tile tile in field) {
-            if (range.Contains(tile.tileId) && tile.cardOnTile != null) {
-                if (tile.cardOnTile.Owner != localPlayer) {
+            if (range.Contains(tile.tileId) && tile.monsterOnTile != null) {
+                if (tile.monsterOnTile.Owner != localPlayer) {
                     return true;
                 }
             }

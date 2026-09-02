@@ -17,31 +17,41 @@ MonoBehaviour:
   cardType: 1
   description: Draw 2 cards
   events:
-  - rid: 6788584317569990739
+  - rid: 6788584525892943989
+  mainSpellEvents: 00000000
   references:
     version: 2
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
-    - rid: 6788584317569990739
+    - rid: 6788584525892943989
       type: {class: CardEvent, ns: , asm: Assembly-CSharp}
       data:
         trigger: 12
         effects:
-          rid: 6788584317569990740
+          rid: 6788584525892943990
         cost:
           rid: -2
         conditions:
-        - rid: 6788584317569990741
+        - rid: 6788584525892943991
         isOptional: 0
         effectType: 1
-    - rid: 6788584317569990740
+    - rid: 6788584525892943990
       type: {class: DrawCardNode, ns: , asm: Assembly-CSharp}
       data:
         nextEffect:
           rid: -2
         cardSubject: 
         drawNumber: 2
-    - rid: 6788584317569990741
+    - rid: 6788584525892943991
+      type: {class: DisjunctionCondition, ns: , asm: Assembly-CSharp}
+      data:
+        conditionList:
+        - rid: 6788584525892943992
+        - rid: 6788584525892943993
+    - rid: 6788584525892943992
+      type: {class: IsOnFieldCondition, ns: , asm: Assembly-CSharp}
+      data: 
+    - rid: 6788584525892943993
       type: {class: IsOnHandCondition, ns: , asm: Assembly-CSharp}
       data: 

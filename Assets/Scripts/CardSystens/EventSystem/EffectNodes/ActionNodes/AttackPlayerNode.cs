@@ -20,15 +20,7 @@ public class AttackPlayerNode : EffectNode {
         yield return ActionSystem.Instance.Perform(attackPlayerGA);
 
         if (NetworkManager.Singleton.IsServer) {
-            /*
-            EffectContext newContext = new();
-            newContext.Source = context.Source;
-            newContext.eventData = new OnAttackedEventData {
-                attackedCard = CardGameManager.Instance.GetIdListFromCardList(new List<Card> { attackPlayerGA.attackedCard }).ToArray()
-            };
 
-            EventSystem.Instance.RaiseEvent(TriggerType.OnAttacked, newContext);
-            */
         }
 
         if (nextEffect != null) {

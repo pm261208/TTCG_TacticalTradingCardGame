@@ -23,8 +23,19 @@ public class SelectCardEffectNode : EffectNode {
 
             if (interaction.IsCanceled) yield break;
 
-            
-            CardGameMultiplayer.Instance.SincCardEvent(CardGameManager.Instance.GetEventIndex(context.Source, interaction.SelectedEvent), context);    
+            if (interaction.SelectedMainSpellTrapEvent == null) {
+                CardGameMultiplayer.Instance.SincCardEvent(CardGameManager.Instance.GetEventIndex(context.Source, interaction.SelectedEvent), context);
+            } else {
+                CardGameMultiplayer.Instance.SincCardEvent(CardGameManager.Instance.GetEventIndex(context.Source, CardGameManager.Instance.placeSpellTrapCardEvent),
+                    new() {
+                        Source = context.Source,
+                        Owner = context.Owner,
+                        eventData = new ActivateCardEventData() {
+                            eventIndex = interaction.SelectedMainSpellTrapEvent ?? 0
+                        }
+                    });
+            }
+              
         
         } else {
 

@@ -26,7 +26,7 @@ public override void OnEnter() {
 
     if(((MonsterCardData)selectedCard.cardData).movequant >= 1) { 
         foreach (Tile tile in CardGameManager.Instance.field) {
-            if (tileRange.Contains(tile.tileId) && tile.IsTileEmpty()) {
+            if (tileRange.Contains(tile.tileId) && !tile.HasMonster()) {
                 tile.SelectableTile();
             }
             
@@ -34,9 +34,9 @@ public override void OnEnter() {
     }
     if(((MonsterCardData)selectedCard.cardData).atkquant >= 1) { 
         foreach (Tile tile in CardGameManager.Instance.field) {
-            if (!tile.IsTileEmpty()) {
-                if (atkRange.Contains(tile.tileId) && tile.cardOnTile.Owner != CardGameManager.Instance.localPlayer) {
-                    tile.cardOnTile.ShowTarget(CardGameManager.Instance.atkCardEvent);
+            if (tile.HasMonster()) {
+                if (atkRange.Contains(tile.tileId) && tile.monsterOnTile.Owner != CardGameManager.Instance.localPlayer) {
+                    tile.monsterOnTile.ShowTarget(CardGameManager.Instance.atkCardEvent);
                 }
                 if (atkRange.Contains(99)) {
                     ObjectManager.Instance.attackPlayerButton.GetComponent<CardInteractionButton>().cardEvent = CardGameManager.Instance.atkPlayerCardEvent;
@@ -65,8 +65,8 @@ public override void TryCancel() {
 public override void OnExit() {
     foreach (Tile tile in CardGameManager.Instance.field) {
         tile.UnselectableTile();
-        if (tile.cardOnTile != null) {
-            tile.cardOnTile.HideTarget();
+        if (tile.monsterOnTile != null) {
+            tile.monsterOnTile.HideTarget();
         }
     }
     ObjectManager.Instance.attackPlayerButton.gameObject.SetActive(false);

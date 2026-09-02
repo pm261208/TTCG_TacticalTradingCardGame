@@ -10,8 +10,9 @@ public class SoftOncePerTurnCondition : EventCondition {
         foreach (EventLog eventLog in CardGameManager.Instance.cardEventLogs) {
             Card card = CardGameManager.Instance.GetCardFromLocalId(eventLog.sourceCardId);
             if (eventLog.turn == CardGameManager.Instance.turnCount &&
-                card.cardId == self.cardId &&
-                card.activatedEventsInstance.Contains(currentEventId)) {
+                CardGameManager.Instance.GetCardFromLocalId(eventLog.sourceCardId).GetCardSO().id == self.GetCardSO().id &&
+                eventLog.eventId == currentEventId &&
+                eventLog.instanceId == card.instanceId) {
                 return false;
             }
         }

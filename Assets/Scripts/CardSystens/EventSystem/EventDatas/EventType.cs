@@ -9,5 +9,6 @@ public enum EventType {
     OnTakeDamageEventData,
     OnAttackedEventData,
     ReduceStarManaEventData,
+    ActivateCardEventData,
     PassiveEventData,
 }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using SerializeReferenceEditor;
 
-[System.Serializable]
+[Serializable]
 public class CardEvent {
     public TriggerType trigger;
     [SerializeReference]

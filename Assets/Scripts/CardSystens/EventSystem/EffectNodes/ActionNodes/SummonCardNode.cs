@@ -12,7 +12,6 @@ public class SummonCardNode : EffectNode {
 
         yield return ActionSystem.Instance.Perform(new SummonCardGA(CardGameManager.Instance.GetCardFromLocalId(GetCardSubject(context)[0]), CardGameManager.Instance.GetTileFromId(GetCardSubject(context)[1])));
 
-        //CardGameMultiplayer.Instance.SincActionNode(ActionNodesEnum.SummonCardNode, cardSubject, context);
         if (nextEffect != null) {
             yield return nextEffect?.Execute(context);
         } 

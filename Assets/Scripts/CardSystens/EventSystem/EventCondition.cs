@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-[System.Serializable]
+[Serializable]
 public abstract class EventCondition{
 
     public abstract bool Evaluate(Card self, EffectContext ctx);

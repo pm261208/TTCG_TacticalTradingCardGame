@@ -37,8 +37,12 @@ public class FieldVisual : MonoBehaviour{
         List<Tile> fieldTiles = new List<Tile>{ };
 
         foreach (Tile tile in CardGameManager.Instance.field) {
-            if(tile.cardOnTile != null) {
-                fieldCards.Add(tile.cardOnTile);
+            if(tile.monsterOnTile != null) {
+                fieldCards.Add(tile.monsterOnTile);
+                fieldTiles.Add(tile);
+            }
+            if(tile.spellTrapOnTile!= null) {
+                fieldCards.Add(tile.spellTrapOnTile);
                 fieldTiles.Add(tile);
             }
         }
@@ -50,7 +54,13 @@ public class FieldVisual : MonoBehaviour{
 
             Vector3 position = fieldTiles[i].transform.position + new Vector3(0, 0.11f, 0);
             fieldCards[i].transform.DOMove(position, duration);
-            //fieldCards[i].transform.DORotate(new Vector3(90, 0, 0), duration);
+            fieldCards[i].transform.DORotate(new(90, 0, 0), duration);
+            if (!fieldCards[i].isSet) {
+                fieldCards[i].GetComponent<CardVisual>().UnflipCard();
+            } else {
+                fieldCards[i].GetComponent<CardVisual>().FlipCard(); 
+            }
+            
         }
 
     }

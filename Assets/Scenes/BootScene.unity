@@ -1370,6 +1370,24 @@ MonoBehaviour:
     conditions: []
     isOptional: 0
     effectType: 0
+  atkCardEvent:
+    trigger: 0
+    effects:
+      rid: 6788584458469769291
+    cost:
+      rid: -2
+    conditions: []
+    isOptional: 0
+    effectType: 0
+  atkPlayerCardEvent:
+    trigger: 0
+    effects:
+      rid: 6788584458469769292
+    cost:
+      rid: -2
+    conditions: []
+    isOptional: 0
+    effectType: 0
   Card: {fileID: 3547584381672951898, guid: abf7fa0ad3972cb46b75530e0f43d759, type: 3}
   Tile: {fileID: 5049893101171811407, guid: af42a16a1ae4cd14b9eb80d4ca203013, type: 3}
   references:
@@ -1377,6 +1395,18 @@ MonoBehaviour:
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
+    - rid: 6788584458469769291
+      type: {class: AttackCardNode, ns: , asm: Assembly-CSharp}
+      data:
+        nextEffect:
+          rid: -2
+        cardSubject: 
+    - rid: 6788584458469769292
+      type: {class: AttackPlayerNode, ns: , asm: Assembly-CSharp}
+      data:
+        nextEffect:
+          rid: -2
+        cardSubject: 
     - rid: 7108073946722598988
       type: {class: SelectBacklineTileNode, ns: , asm: Assembly-CSharp}
       data:

@@ -13,7 +13,6 @@ public class ActivateCardEventNode : EffectNode {
 
     public override IEnumerator Execute(EffectContext context) {
 
-        //CardGameMultiplayer.Instance.SincActionNode(ActionNodesEnum.ActivateCardEventNode, cardSubject, context);
         yield return ActionSystem.Instance.Perform(new DeclareEffectGA(CardGameManager.Instance.GetCardFromLocalId(context.Source)));
     }
 }

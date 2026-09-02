@@ -838,6 +838,8 @@ MonoBehaviour:
   descriptionText: {fileID: 1207713670672141400}
   background: {fileID: 390180005253810251}
   border: {fileID: 483885681194494132}
+  cardVisualGO: {fileID: 745353349854200381}
+  cardBackVisualGO: {fileID: 6940033430829934992}
   starLevelContainer: {fileID: 5807811771344035789}
   atkContainer: {fileID: 5324070111752027251}
   hpContainer: {fileID: 7127478425157692705}
@@ -860,7 +862,8 @@ MonoBehaviour:
   cardName: 
   cardDescription: 
   cardType: 0
-  activatedEventsInstance: 
+  isSet: 0
+  instanceId: 0
 --- !u!65 &686436930353093586
 BoxCollider:
   m_ObjectHideFlags: 0

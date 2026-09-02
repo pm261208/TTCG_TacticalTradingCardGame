@@ -39,6 +39,7 @@ public class EffectContext : INetworkSerializable{
             EventType.OnTakeDamageEventData => new OnTakeDamageEventData(),
             EventType.OnAttackedEventData => new OnAttackedEventData(),
             EventType.ReduceStarManaEventData => new RemoveStarManaEventData(),
+            EventType.ActivateCardEventData => new ActivateCardEventData(),
             EventType.PassiveEventData => new PassiveEventData(),
             _ => null
         };

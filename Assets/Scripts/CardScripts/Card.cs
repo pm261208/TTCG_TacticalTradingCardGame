@@ -18,7 +18,8 @@ public class Card : GameObjectBase {
     public string cardDescription;
     public CardType cardType;
     public CardData cardData;
-    public List<int> activatedEventsInstance = new();
+    public bool isSet;
+    public int instanceId;
     public Player Owner;
 
 
@@ -57,7 +58,7 @@ public class Card : GameObjectBase {
     }
     public void SetupMonsterCard() {
         MonsterCardSO monsterCard = (MonsterCardSO)card;
-        MonsterCardData monsterCardData = new MonsterCardData() {
+        MonsterCardData monsterCardData = new() {
             cardStarLevel = monsterCard.starLevel,
             cardHp = monsterCard.hp,
             cardAtk = monsterCard.atk,
@@ -106,7 +107,7 @@ public class Card : GameObjectBase {
             }else if (evt.effectType == EffectTypes.ignition) {
                 StartCoroutine(ChainSystem.Instance.ActivateIgnition(this, evt, new() { Source = cardId, Owner = Owner.id, eventData = ctx.eventData }, Owner));
 
-            }else if (evt.effectType == EffectTypes.ignitianResponse) {
+            }else if (evt.effectType == EffectTypes.ignitionResponse) {
                 if (ChainSystem.Instance.buildingChain) {
                     ChainSystem.Instance.RegisterPendingResponse(
                         new PendingEffect {
@@ -147,7 +148,8 @@ public class Card : GameObjectBase {
     }
 
     public void TrySelectCard() {
-        if (CardGameManager.Instance.localPlayer == CardGameManager.Instance.turnPlayer && Owner == CardGameManager.Instance.localPlayer) {
+        if (CardGameManager.Instance.localPlayer == CardGameManager.Instance.turnPlayer && Owner == CardGameManager.Instance.localPlayer
+            && !ChainSystem.Instance.resolvingChain && !ChainSystem.Instance.buildingChain) {
             EffectContext context = new(){ Source = cardId, Owner = Owner.id };
 
             SelectCard(context);
@@ -173,6 +175,8 @@ public class Card : GameObjectBase {
 
         context.Owner = Owner.id;
         foreach (CardEvent cardEvent in card.events) {
+            if (cardEvent.effectType != EffectTypes.ignition && cardEvent.effectType != EffectTypes.ignitionResponse) continue;
+
             bool isAble = true;
             foreach (EventCondition condition in cardEvent.conditions) {
                 if (!condition.Evaluate(this, context)) {
@@ -182,8 +186,14 @@ public class Card : GameObjectBase {
             if (!isAble) continue;
 
             // define as açoes
+            
             interactionIndexs.Add(card.events.IndexOf(cardEvent));
         }
+        if (EvaluateEvent(CardGameManager.Instance.normalSummonCardEvent)) {
+            interactionIndexs.Add(CardGameManager.Instance.GetEventIndex(cardId, CardGameManager.Instance.normalSummonCardEvent));
+        }
+
+
         if (CardGameManager.Instance.IsCardInHand(this)) {
             EffectNode selectCardEffectNode = new SelectCardEffectNode {
                 eventIndexs = interactionIndexs,
@@ -204,6 +214,8 @@ public class Card : GameObjectBase {
 
         context.Owner = Owner.id;
         foreach (CardEvent cardEvent in card.events) {
+            if (cardEvent.effectType != EffectTypes.ignition && cardEvent.effectType != EffectTypes.ignitionResponse) continue;
+
             bool isAble = true;
             foreach (EventCondition condition in cardEvent.conditions) {
                 if (!condition.Evaluate(this, context)) {
@@ -214,8 +226,13 @@ public class Card : GameObjectBase {
 
             // define as açoes
             interactionIndexs.Add(card.events.IndexOf(cardEvent));
+            
         }
-        
+
+        if (EvaluateEvent(CardGameManager.Instance.setCardEvent)) {
+            interactionIndexs.Add(CardGameManager.Instance.GetEventIndex(cardId, CardGameManager.Instance.setCardEvent));
+        }
+
         EffectNode selectCardEffectNode = new SelectCardEffectNode {
             eventIndexs = interactionIndexs,
             cardSubject = "Source",
@@ -224,7 +241,34 @@ public class Card : GameObjectBase {
         
     }
     private void SelectTrapCard(EffectContext context) {
+        List<int> interactionIndexs = new();
 
+        context.Owner = Owner.id;
+        foreach (CardEvent cardEvent in card.events) {
+            if (cardEvent.effectType != EffectTypes.ignition && cardEvent.effectType != EffectTypes.ignitionResponse) continue;
+
+            bool isAble = true;
+            foreach (EventCondition condition in cardEvent.conditions) {
+                if (!condition.Evaluate(this, context)) {
+                    isAble = false; break;
+                }
+            }
+            if (!isAble) continue;
+
+            // define as açoes
+            interactionIndexs.Add(card.events.IndexOf(cardEvent));
+
+        }
+
+        if (EvaluateEvent(CardGameManager.Instance.setCardEvent)) {
+            interactionIndexs.Add(CardGameManager.Instance.GetEventIndex(cardId, CardGameManager.Instance.setCardEvent));
+        }
+
+        EffectNode selectCardEffectNode = new SelectCardEffectNode {
+            eventIndexs = interactionIndexs,
+            cardSubject = "Source",
+        };
+        StartCoroutine(selectCardEffectNode.Execute(context));
     }
 
     public int AvailableEvents() {
@@ -237,7 +281,7 @@ public class Card : GameObjectBase {
                 if(!isAble) break;
             }
             if (!isAble) continue;
-            if (cardEvent.effectType == EffectTypes.ignition && CardGameManager.Instance.turnPlayer != Owner) continue;
+            if ((cardEvent.effectType == EffectTypes.ignition || cardEvent.effectType == EffectTypes.ignitionResponse) && CardGameManager.Instance.turnPlayer != Owner) continue;
 
             eventCount++;
         }
@@ -272,7 +316,8 @@ public class Card : GameObjectBase {
 
         }
         if (cardType == CardType.Trap) {
-            
+            if (CardGameManager.Instance.IsCardInHand(this) && CardGameManager.Instance.turnPlayer == Owner) 
+                { eventCount++; }
         }
         return eventCount;
     }
@@ -281,33 +326,19 @@ public class Card : GameObjectBase {
         GameObject button;
         CardInteractionButton newbutton;
 
-        if (CardGameManager.Instance.IsCardInHand(this) && card.cardType == CardType.Monster) {
-            button = Instantiate(cardOptions.transform.GetChild(0).gameObject);
-            button.transform.SetParent(cardOptions.transform);
-            button.transform.localScale = new Vector3(1, 1, 1);
-            button.transform.localPosition = Vector3.zero;
-            button.transform.localRotation = Quaternion.Euler(Vector3.zero);
-
-            button.GetComponent<Image>().color = new Color32(100, 255, 255, 255);
-
-            if (EvaluateEvent(CardGameManager.Instance.normalSummonCardEvent)) {
-                newbutton = button.GetComponent<CardInteractionButton>();
-                button.gameObject.SetActive(true);
-                newbutton.DefineAction(CardGameManager.Instance.normalSummonCardEvent);
-            }
-            
-        }
-
         foreach (int interaction in interactions){
             button = Instantiate(cardOptions.transform.GetChild(0).gameObject);
             button.transform.SetParent(cardOptions.transform);
             button.transform.localScale = new Vector3(1, 1, 1);
-            button.transform.localPosition = Vector3.zero;
-            button.transform.localRotation = Quaternion.Euler(Vector3.zero);
-            
+            button.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.Euler(Vector3.zero));
+            if (interaction == CardGameManager.Instance.GetEventIndex(cardId, CardGameManager.Instance.normalSummonCardEvent) ||
+                interaction == CardGameManager.Instance.GetEventIndex(cardId, CardGameManager.Instance.setCardEvent)) {
+                button.GetComponent<Image>().color = new Color32(100, 255, 255, 255);
+            }
+
             newbutton = button.GetComponent<CardInteractionButton>();
-            button.gameObject.SetActive(true);
-            newbutton.DefineAction(card.events[interaction]);
+            button.SetActive(true);
+            newbutton.DefineAction(CardGameManager.Instance.GetEventById(interaction, this));
         }
     }
 

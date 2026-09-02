@@ -7,13 +7,15 @@ public class ChoseCardsResponseWindow : MonoBehaviour{
 
     [SerializeField] private GameObject Layout;
     [SerializeField] private GameObject Content;
-    [SerializeField] private TempButton cardOption;
+    [SerializeField] private TempButton cardOptionTemplate;
     [SerializeField] private TempButton activateButton;
     [SerializeField] private TempButton cancelButton;
 
     void Start(){
         SelectCardWindowInteraction.SelectCardWindowOpen += SelectCardWindowInteraction_SelectCardWindowOpen;
         SelectCardWindowInteraction.SelectCardWindowClose += SelectCardWindowInteraction_SelectCardWindowClose;
+        cardOptionTemplate.gameObject.SetActive(false);
+        Layout.SetActive(false);
     }
 
     private void SelectCardWindowInteraction_SelectCardWindowClose(object sender, System.EventArgs e) {
@@ -41,21 +43,26 @@ public class ChoseCardsResponseWindow : MonoBehaviour{
             cancelButton.isClickable = false;
             cancelButton.GetComponent<Image>().color = new Color32(150, 68, 68, 255);
         }
-        if (Content.transform.childCount == 1) {
-            foreach (Card card in e.cards) {
-                TempButton cardOp = Instantiate(cardOption);
-                cardOp.gameObject.SetActive(true);
-                ((CardOptionButton)cardOp).card = card;
-                ((CardOptionButton)cardOp).Setup();
-                cardOp.transform.SetParent(Content.transform);
+        foreach (Transform filho in Content.transform) {
+            if (filho.gameObject.activeSelf) {
+                Destroy(filho.gameObject);
             }
         }
+
+        foreach (Card card in e.cards) {
+            TempButton cardOp = Instantiate(cardOptionTemplate);
+            cardOp.gameObject.SetActive(true);
+            ((CardOptionButton)cardOp).card = card;
+            ((CardOptionButton)cardOp).Setup();
+            cardOp.transform.SetParent(Content.transform);
+        }
+        
         foreach (Transform filho in Content.transform) {
             CardOptionButton opitionButton = filho.GetComponent<CardOptionButton>();
             if (e.selectedCard == opitionButton.card) {
-                opitionButton.SelectedVisual.gameObject.SetActive(true);
+                opitionButton.SelectedVisual.SetActive(true);
             } else {
-                opitionButton.SelectedVisual.gameObject.SetActive(false);
+                opitionButton.SelectedVisual.SetActive(false);
             }
         }
         

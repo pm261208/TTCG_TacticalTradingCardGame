@@ -29,7 +29,6 @@ public abstract class EffectNode {
 
 
             if (field == null) {
-                Debug.Log(sub);
                 field = context.eventData.GetType().GetField(sub, BindingFlags.Public | BindingFlags.Instance);
                 if (field == null) {
                     Debug.LogError("Campo não encontrado!");

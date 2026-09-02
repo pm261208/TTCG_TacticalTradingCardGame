@@ -1,15 +1,13 @@
-using System.Collections.Generic;
-using NUnit.Framework.Constraints;
 using UnityEngine;
 
-public class SelectBacklineTileInteraction : PlayerInteraction {
+public class SelectTileOnYourFieldInteraction : PlayerInteraction {
 
     private ulong Player;
     public Tile SelectedTile { get; private set; }
 
-    public SelectBacklineTileInteraction(ulong player, bool canCancel) {
+    public SelectTileOnYourFieldInteraction(ulong player, bool canCancel) {
         Player = player;
-        CanCancel = canCancel;    
+        CanCancel = canCancel;
     }
 
     public override void TryCancel() {
@@ -26,19 +24,17 @@ public class SelectBacklineTileInteraction : PlayerInteraction {
     public override void OnClickCard(Card card) {
         Tile tile = CardGameManager.Instance.GetTileWCard(card);
         if (tile != null) {
-            if (tile.monsterOnTile == null && tile.isSelectable) {
+            if (tile.spellTrapOnTile == null && tile.isSelectable) {
                 SelectedTile = tile;
 
                 Finish();
                 return;
             }
-        } 
+        }
         TryCancel();
         if (CanCancel) {
             card.TrySelectCard();
         }
-        
-            
     }
 
     public override void OnClickZone(Tile tile) {
@@ -52,7 +48,7 @@ public class SelectBacklineTileInteraction : PlayerInteraction {
 
     public override void OnEnter() {
         foreach (Tile tile in CardGameManager.Instance.field) {
-            if (tile.IsTileBackline(Player) && !tile.HasMonster()) {
+            if (tile.IsTileInYourField(Player) && !tile.HasSpellTrap()) {
                 tile.SelectableTile();
             }
         }

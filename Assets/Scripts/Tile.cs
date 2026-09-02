@@ -7,7 +7,8 @@ using UnityEngine;
 public class Tile : GameObjectBase {
 
     public int tileId;
-    public Card cardOnTile;
+    public Card monsterOnTile;
+    public Card spellTrapOnTile;
     public bool isSelectable;
 
     [SerializeField] private TextMeshProUGUI textMeshProUGUI;
@@ -30,7 +31,15 @@ public class Tile : GameObjectBase {
 
 
     public bool IsTileEmpty() {
-        if (cardOnTile == null) return true;
+        if (monsterOnTile == null) return true;
+        return false;
+    }
+    public bool HasMonster() {
+        if (monsterOnTile != null) return true;
+        return false;
+    }
+    public bool HasSpellTrap() {
+        if (spellTrapOnTile != null) return true;
         return false;
     }
 
@@ -42,6 +51,19 @@ public class Tile : GameObjectBase {
         }
         if (player == 2) {
             if (tileId.ToString()[1] == '5') {
+                return true;
+            }
+        }
+        return false;
+    }
+    public bool IsTileInYourField(ulong player) {
+        if(player == CardGameManager.Instance.player1.id) {
+            if (tileId.ToString()[1] == '1' || tileId.ToString()[1] == '2') {
+                return true;
+            } 
+        }
+        if (player == 2) {
+            if (tileId.ToString()[1] == '5' || tileId.ToString()[1] == '4') {
                 return true;
             }
         }

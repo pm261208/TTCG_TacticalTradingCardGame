@@ -5,5 +5,5 @@ public enum EffectTypes {
     ignition,
     trigger,
     response,
-    ignitianResponse,
+    ignitionResponse,
 }

@@ -24,7 +24,7 @@ public class CardGameMultiplayer : NetworkBehaviour {
     }
 
     private NetworkList<PlayerData> playerDataNetworkList;
-    private NetworkVariable<ulong> turnPlayerId = new NetworkVariable<ulong>(0UL);
+    private NetworkVariable<ulong> turnPlayerId = new(0UL);
     private int setPlayers;
 
     private string playerName;
@@ -165,23 +165,26 @@ public class CardGameMultiplayer : NetworkBehaviour {
         PlayerData playerData = playerDataNetworkList[playerDataIndex];
 
         if (CardGameManager.Instance.player1 == null) {
-            CardGameManager.Instance.player1 = new Player();
-            CardGameManager.Instance.player1.id = playerData.clientId;
-            CardGameManager.Instance.player1.playerName = playerName;
-            CardGameManager.Instance.player1.playerData = playerData;
-            CardGameManager.Instance.player1.playerDeck = ScriptableObject.CreateInstance<DeckSO>();
+            CardGameManager.Instance.player1 = new Player() {
+                id = playerData.clientId,
+                playerName = playerName,
+                playerData = playerData,
+                playerDeck = ScriptableObject.CreateInstance<DeckSO>(),
+            };
             CardGameManager.Instance.player1.playerDeck.Deck = GetCardSOListFromIndexList(new List<int>(playerDeck));
         } else if (CardGameManager.Instance.player2 == null) {
-            CardGameManager.Instance.player2 = new Player();
-            CardGameManager.Instance.player2.id = playerData.clientId;
-            CardGameManager.Instance.player2.playerName = playerName;
-            CardGameManager.Instance.player2.playerData = playerData;
-            CardGameManager.Instance.player2.playerDeck = ScriptableObject.CreateInstance<DeckSO>();
+            CardGameManager.Instance.player2 = new Player() {
+                id = playerData.clientId,
+                playerName = playerName,
+                playerData = playerData,
+                playerDeck = ScriptableObject.CreateInstance<DeckSO>(),
+            };
             CardGameManager.Instance.player2.playerDeck.Deck = GetCardSOListFromIndexList(new List<int>(playerDeck));
         }
 
-        CardGameManager.Instance.localPlayer = new Player();
-        CardGameManager.Instance.localPlayer.id = 0;
+        CardGameManager.Instance.localPlayer = new Player() { 
+            id = 0
+        };
     }
 
     [Rpc(SendTo.ClientsAndHost)]
@@ -208,8 +211,8 @@ public class CardGameMultiplayer : NetworkBehaviour {
     }
 
     [Rpc(SendTo.Server)]
-    public void SincCardEventWithServerRpc(int eventId, EffectContext ctx, RpcParams rpcParams = default) {
-        
+    public void SincCardEventWithServerRpc(int eventId, EffectContext ctx) {
+
         //fala para o servidor qual evento executar
         ActivateEventById(eventId, ctx);
 
@@ -280,7 +283,7 @@ public class CardGameMultiplayer : NetworkBehaviour {
     [Rpc(SendTo.ClientsAndHost)]
     public void NewSincResolveEffectClientRpc(int cardEventId, EffectContext context) {
 
-        CardEvent cardEvent = GetEventById(cardEventId, context);
+        CardEvent cardEvent = CardGameManager.Instance.GetEventById(cardEventId, CardGameManager.Instance.GetCardFromLocalId(context.Source));
         Debug.Log("CLIENT ResolveEventId: " + cardEventId + " ResolvedCardID: " + context.Source);
         StartCoroutine(ChainSystem.Instance.ResolveEffectClient(cardEvent, context));
     }
@@ -305,6 +308,16 @@ public class CardGameMultiplayer : NetworkBehaviour {
 
         turnPlayerId.OnValueChanged += TurnPlayerId_OnValueChaged;
         CardGameManager.Instance.DefineInitialTurnPlayer(playerId);
+    }
+
+    public void OnChainStateChanged() {
+        ChainSystem_OnChainStateChangedClientRpc(ChainSystem.Instance.buildingChain, ChainSystem.Instance.resolvingChain);
+    }
+
+    [Rpc(SendTo.ClientsAndHost)]
+    private void ChainSystem_OnChainStateChangedClientRpc(bool buildingChain, bool resolvingChain) {
+        ChainSystem.Instance.buildingChain = buildingChain;
+        ChainSystem.Instance.resolvingChain = resolvingChain;
     }
 
     public bool IsPlayerIndexConnected(int playerIndex) {
@@ -354,7 +367,7 @@ public class CardGameMultiplayer : NetworkBehaviour {
         return cardSODatabase.Deck[cardSOIndex];
     }
     public List<int> GetCardSOIndexListFromCardSOList(List<CardSO> cardSOList) {
-        List<int> indexList = new List<int>();
+        List<int> indexList = new();
         foreach (CardSO cardSO in cardSOList) {
             indexList.Add(GetCardSOIndex(cardSO));
         }
@@ -362,7 +375,7 @@ public class CardGameMultiplayer : NetworkBehaviour {
     }
 
     public List<CardSO> GetCardSOListFromIndexList(List<int> cardSOIndexList) {
-        List<CardSO> cardSOList = new List<CardSO>();
+        List<CardSO> cardSOList = new();
         foreach (int index in cardSOIndexList) {
             cardSOList.Add(GetCardSOFromIndex(index));
         }
@@ -370,7 +383,7 @@ public class CardGameMultiplayer : NetworkBehaviour {
     }
 
     public List<int> GetCardIdList(List<Card> cardList) {
-        List<int> idList = new List<int>();
+        List<int> idList = new();
         foreach (Card card in cardList) {
             idList.Add(card.cardId);
         }
@@ -387,48 +400,24 @@ public class CardGameMultiplayer : NetworkBehaviour {
     }
 
     private void ActivateEventById(int eventId, EffectContext ctx) {
-        if (eventId == 99) {
-            StartCoroutine(ChainSystem.Instance.ActivateIgnition(CardGameManager.Instance.GetCardFromLocalId(ctx.Source), CardGameManager.Instance.normalSummonCardEvent, ctx, CardGameManager.Instance.GetCardFromLocalId(ctx.Source).Owner));
-        } else if (eventId == 98) {
-            StartCoroutine(ChainSystem.Instance.ActivateIgnition(CardGameManager.Instance.GetCardFromLocalId(ctx.Source), CardGameManager.Instance.moveCardEvent, ctx, CardGameManager.Instance.GetCardFromLocalId(ctx.Source).Owner));
-        } else if (eventId == 97) {
-            StartCoroutine(ChainSystem.Instance.ActivateIgnition(CardGameManager.Instance.GetCardFromLocalId(ctx.Source), CardGameManager.Instance.atkCardEvent, ctx, CardGameManager.Instance.GetCardFromLocalId(ctx.Source).Owner));
-        }else if (eventId == 96) {
-            StartCoroutine(ChainSystem.Instance.ActivateIgnition(CardGameManager.Instance.GetCardFromLocalId(ctx.Source), CardGameManager.Instance.atkPlayerCardEvent, ctx, CardGameManager.Instance.GetCardFromLocalId(ctx.Source).Owner));
-        } else {
-            StartCoroutine(ChainSystem.Instance.ActivateIgnition(CardGameManager.Instance.GetCardFromLocalId(ctx.Source), CardGameManager.Instance.GetCardFromLocalId(ctx.Source).GetCardSO().events[eventId], ctx, CardGameManager.Instance.GetCardFromLocalId(ctx.Source).Owner));
-        }
-    }
+        CardEvent cardEvent = CardGameManager.Instance.GetEventById(eventId, CardGameManager.Instance.GetCardFromLocalId(ctx.Source));
 
-    private CardEvent GetEventById(int eventId, EffectContext ctx) {
-        if (eventId == 99) {
-            return CardGameManager.Instance.normalSummonCardEvent;
-        } else if (eventId == 98) {
-            return CardGameManager.Instance.moveCardEvent;
-        } else if (eventId == 97) {
-            return CardGameManager.Instance.atkCardEvent;
-        }else if (eventId == 96) {
-            return CardGameManager.Instance.atkPlayerCardEvent;
-        } else {
-            return CardGameManager.Instance.GetCardFromLocalId(ctx.Source).GetCardSO().events[eventId];
-        }
+        StartCoroutine(ChainSystem.Instance.ActivateIgnition(CardGameManager.Instance.GetCardFromLocalId(ctx.Source), cardEvent, ctx, CardGameManager.Instance.GetCardFromLocalId(ctx.Source).Owner));
     }
 
     [Rpc(SendTo.Server)]
     public void SincDrawServerRpc(ulong playerId, int drawNumber) {
 
-        EffectContext context = new EffectContext();
-        context.Owner = playerId;
-        DrawCardNode drawCard = new DrawCardNode { drawNumber = drawNumber };
+        EffectContext context = new() { Owner = playerId };
+        DrawCardNode drawCard = new(){ drawNumber = drawNumber };
         StartCoroutine(drawCard.Execute(context));
         SincDrawClientRpc(playerId, drawNumber);
     }
     [Rpc(SendTo.ClientsAndHost)]
     public void SincDrawClientRpc(ulong playerId, int drawNumber) {
 
-        EffectContext context = new EffectContext();
-        context.Owner = playerId;
-        DrawCardNode drawCard = new DrawCardNode { drawNumber = drawNumber };
+        EffectContext context = new() { Owner = playerId};
+        DrawCardNode drawCard = new() { drawNumber = drawNumber };
         StartCoroutine(drawCard.Execute(context));
     }
 }

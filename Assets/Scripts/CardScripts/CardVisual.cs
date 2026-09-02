@@ -1,8 +1,9 @@
 using System.Collections.Generic;
+using DG.Tweening;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public class CardVisual : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
 
@@ -16,6 +17,8 @@ public class CardVisual : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
     [SerializeField] private Image background;
     [SerializeField] private Image border;
 
+    [SerializeField] private GameObject cardVisualGO;
+    [SerializeField] private GameObject cardBackVisualGO;
     [SerializeField] private GameObject starLevelContainer;
     [SerializeField] private GameObject atkContainer;
     [SerializeField] private GameObject hpContainer;
@@ -71,7 +74,7 @@ public class CardVisual : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
             ObjectManager.Instance.handPlayer.GetComponent<HandVisual>().PulUpCard(GetComponent<Card>());
         }
 
-        CardHoverSystem.instance.Show(card);
+        if(!card.isSet || card.Owner == CardGameManager.Instance.localPlayer) CardHoverSystem.instance.Show(card);
         CardHoverSystem.instance.PoiterOnCardEnter();
     }
 
@@ -93,6 +96,21 @@ public class CardVisual : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
         } else {
             border.color = Color.black;
         }
+    }
+
+    public void FlipCard() {
+        float duration = 0.25f;
+        cardVisualGO.SetActive(false);
+        
+        cardVisualGO.transform.DOLocalRotate(new Vector3(0, 0, -90), duration);
+        cardBackVisualGO.transform.DOLocalRotate(new Vector3(0, 0, -90), duration);
+    }
+    public void UnflipCard() {
+        float duration = 0.25f;
+        cardVisualGO.SetActive(true);
+
+        cardVisualGO.transform.DOLocalRotate(Vector3.zero, duration);
+        cardBackVisualGO.transform.DOLocalRotate(Vector3.zero, duration);
     }
 
 }

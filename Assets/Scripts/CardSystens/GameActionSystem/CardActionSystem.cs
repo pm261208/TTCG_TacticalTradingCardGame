@@ -19,6 +19,9 @@ public class CardActionSystem : MonoBehaviour{
         ActionSystem.AttachPerformer<AttackCardGA>(AttackCardPerformer);
         ActionSystem.AttachPerformer<RemoveStarManaAmountGA>(RemoveStarManaAmountPerformer);
         ActionSystem.AttachPerformer<AttackPlayerGA>(AttackPlayerPerformer);
+        ActionSystem.AttachPerformer<PlaceSpellTrapCardOnFieldGA>(PlaceSpellTrapCardOnFieldPerformer);
+        ActionSystem.AttachPerformer<SetCardGA>(SetSpellTrapCardOnFieldPerformer);
+        ActionSystem.AttachPerformer<UnflipCardGA>(UnflipCardPerformer);
     }
     private void OnDisable() {
         ActionSystem.DetachPerformer<DrawCardGA>();
@@ -30,6 +33,9 @@ public class CardActionSystem : MonoBehaviour{
         ActionSystem.DetachPerformer<AttackCardGA>();
         ActionSystem.DetachPerformer<RemoveStarManaAmountGA>();
         ActionSystem.DetachPerformer<AttackPlayerGA>();
+        ActionSystem.DetachPerformer<PlaceSpellTrapCardOnFieldGA>();
+        ActionSystem.DetachPerformer<SetCardGA>();
+        ActionSystem.DetachPerformer<UnflipCardGA>();
     }
 
     private IEnumerator DrawCardPerformer(DrawCardGA drawCardGA) {
@@ -81,12 +87,12 @@ public class CardActionSystem : MonoBehaviour{
             StartCoroutine(ObjectManager.Instance.gyOpponent.GetComponent<GYVisual>().WaitForUpdateCardsPosition(0.25f));
         }
         CardGameManager.Instance.RemoveCard(card);
-        card.activatedEventsInstance.Clear();
+        card.instanceId++;
         MonsterCardData monsterData = (MonsterCardData)card.cardData;
         monsterData.movequant = 1;
         monsterData.atkquant = 1;
-        card.transform.parent = tile.transform;
-        tile.cardOnTile = card;
+        card.transform.SetParent(tile.transform, true);
+        tile.monsterOnTile = card;
 
         ObjectManager.Instance.field.GetComponent<FieldVisual>().ShowSummonedCard(card, tile);
         yield return StartCoroutine(ObjectManager.Instance.field.GetComponent<FieldVisual>().WaitForUpdateCardsPosition(1.0f));
@@ -99,8 +105,8 @@ public class CardActionSystem : MonoBehaviour{
         card.transform.parent = tile.transform;
         MonsterCardData monsterData = (MonsterCardData)card.cardData;
         monsterData.movequant -= 1;
-        tile.cardOnTile = card;
-        previosTile.cardOnTile = null;
+        tile.monsterOnTile = card;
+        previosTile.monsterOnTile = null;
 
         yield return StartCoroutine(ObjectManager.Instance.field.GetComponent<FieldVisual>().WaitForUpdateCardsPosition(0.1f)); ;
     }
@@ -192,6 +198,61 @@ public class CardActionSystem : MonoBehaviour{
         attackingCardData.atkquant -= 1;
 
         yield return new WaitForSeconds(0.01f);
+    }
+
+    private IEnumerator PlaceSpellTrapCardOnFieldPerformer(PlaceSpellTrapCardOnFieldGA placeSpellTrapCardOnFieldGA) {
+        Card card = placeSpellTrapCardOnFieldGA.card;
+        Tile tile = placeSpellTrapCardOnFieldGA.tile;
+        if (CardGameManager.Instance.IsCardInHand(card)) {
+            StartCoroutine(ObjectManager.Instance.handPlayer.GetComponent<HandVisual>().WaitForUpdateCardsPosition(0.25f));
+            StartCoroutine(ObjectManager.Instance.handOpponent.GetComponent<HandVisual>().WaitForUpdateCardsPosition(0.25f));
+        }
+        if (CardGameManager.Instance.IsCardInDeck(card)) {
+            StartCoroutine(ObjectManager.Instance.deckPlayer.GetComponent<DeckVisual>().WaitForUpdateCardsPosition(0.25f));
+            StartCoroutine(ObjectManager.Instance.deckOpponent.GetComponent<DeckVisual>().WaitForUpdateCardsPosition(0.25f));
+        }
+        if (CardGameManager.Instance.IsCardInGy(card)) {
+            StartCoroutine(ObjectManager.Instance.gyPlayer.GetComponent<GYVisual>().WaitForUpdateCardsPosition(0.25f));
+            StartCoroutine(ObjectManager.Instance.gyOpponent.GetComponent<GYVisual>().WaitForUpdateCardsPosition(0.25f));
+        }
+        CardGameManager.Instance.RemoveCard(card);
+        card.instanceId++;
+        card.transform.parent = tile.transform;
+        tile.spellTrapOnTile = card;
+
+        ObjectManager.Instance.field.GetComponent<FieldVisual>().UpdateCardPositions();
+        yield return new WaitForSeconds(1f);
+    }
+    private IEnumerator SetSpellTrapCardOnFieldPerformer(SetCardGA setCardGA) {
+        Card card = setCardGA.card;
+        Tile tile = setCardGA.tile;
+        if (CardGameManager.Instance.IsCardInHand(card)) {
+            StartCoroutine(ObjectManager.Instance.handPlayer.GetComponent<HandVisual>().WaitForUpdateCardsPosition(0.25f));
+            StartCoroutine(ObjectManager.Instance.handOpponent.GetComponent<HandVisual>().WaitForUpdateCardsPosition(0.25f));
+        }
+        if (CardGameManager.Instance.IsCardInDeck(card)) {
+            StartCoroutine(ObjectManager.Instance.deckPlayer.GetComponent<DeckVisual>().WaitForUpdateCardsPosition(0.25f));
+            StartCoroutine(ObjectManager.Instance.deckOpponent.GetComponent<DeckVisual>().WaitForUpdateCardsPosition(0.25f));
+        }
+        if (CardGameManager.Instance.IsCardInGy(card)) {
+            StartCoroutine(ObjectManager.Instance.gyPlayer.GetComponent<GYVisual>().WaitForUpdateCardsPosition(0.25f));
+            StartCoroutine(ObjectManager.Instance.gyOpponent.GetComponent<GYVisual>().WaitForUpdateCardsPosition(0.25f));
+        }
+        CardGameManager.Instance.RemoveCard(card);
+        card.instanceId++;
+        card.transform.parent = tile.transform;
+        tile.spellTrapOnTile = card;
+        card.isSet = true;
+
+        ObjectManager.Instance.field.GetComponent<FieldVisual>().UpdateCardPositions();
+        yield return new WaitForSeconds(0.5f);
+    }
+
+    private IEnumerator UnflipCardPerformer(UnflipCardGA unflipCardGA) {
+        Card card = unflipCardGA.card;
+        card.isSet = false;
+        ObjectManager.Instance.field.GetComponent<FieldVisual>().UpdateCardPositions();
+        yield return new WaitForSeconds(0.25f);
     }
 
     private IEnumerator DeclareEffectPerformer(DeclareEffectGA declareEffectGA) {

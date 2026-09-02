@@ -15,7 +15,6 @@ public class DrawCardNode : EffectNode {
 
     public override IEnumerator Execute(EffectContext context) {
         DrawCardGA drawCardGA = new(drawNumber, CardGameManager.Instance.GetPlayerFromId(context.Owner));
-
         yield return ActionSystem.Instance.Perform(drawCardGA);
 
         if (NetworkManager.Singleton.IsServer) {
