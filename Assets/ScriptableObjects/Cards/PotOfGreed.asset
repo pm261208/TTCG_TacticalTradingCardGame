@@ -27,7 +27,7 @@ MonoBehaviour:
     - rid: 6788584525892943989
       type: {class: CardEvent, ns: , asm: Assembly-CSharp}
       data:
-        trigger: 12
+        trigger: 15
         effects:
           rid: 6788584525892943990
         cost:

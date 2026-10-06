@@ -8,7 +8,7 @@ public class MonsterCardSO : CardSO {
     public int atk;
     public int hp;
 
-    public List<int> moveRange;
-    public List<int> atkRange;
+    public string moveRange;
+    public string atkRange;
 
 }

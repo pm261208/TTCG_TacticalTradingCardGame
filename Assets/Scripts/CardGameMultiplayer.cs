@@ -12,6 +12,8 @@ public class CardGameMultiplayer : NetworkBehaviour {
     public const int MAX_PLAYER_AMOUNT = 3;
     public const string PLAYER_PREFS_PLAYER_NAME_MULTIPLAYER = "PlayerNameMultiplayer";
 
+    public int matchID;
+
     public static CardGameMultiplayer Instance { get; private set; }
 
     public event EventHandler OnTryingToJoinGame;
@@ -36,7 +38,11 @@ public class CardGameMultiplayer : NetworkBehaviour {
     private void Awake() {
         Instance = this;
 
-        playerName = PlayerPrefs.GetString(PLAYER_PREFS_PLAYER_NAME_MULTIPLAYER, "PlayerName" + UnityEngine.Random.Range(100, 1000));
+        playerName = PlayerPrefs.GetString(PLAYER_PREFS_PLAYER_NAME_MULTIPLAYER);
+        if (playerName == "") {
+            playerName = "PlayerName" + UnityEngine.Random.Range(100, 1000);
+            PlayerPrefs.SetString(PLAYER_PREFS_PLAYER_NAME_MULTIPLAYER, playerName);
+        }
 
         playerDataNetworkList = new NetworkList<PlayerData>();
         playerDataNetworkList.OnListChanged += PlayerDataNetworkList_OnListChanged;
@@ -64,14 +70,14 @@ public class CardGameMultiplayer : NetworkBehaviour {
     public void PlayerMatchDataSincServerRpc() {
         setPlayers += 1;
         if (setPlayers == MAX_PLAYER_AMOUNT-1) {
-            CardGameManager.Instance.StartMatchT();
+            CardGameManager.Instance.StartMatch();
             PlayerSetClientRpc();
             GenerateTurnPlayerServerRpc();
         }
     }
     [Rpc(SendTo.ClientsAndHost)]
     private void PlayerSetClientRpc() {
-        CardGameManager.Instance.StartMatchT();     
+        CardGameManager.Instance.StartMatch();     
     }
 
     private void PlayerDataNetworkList_OnListChanged(NetworkListEvent<PlayerData> changeEvent) {
@@ -242,6 +248,8 @@ public class CardGameMultiplayer : NetworkBehaviour {
         if (CardGameManager.Instance.localPlayer.id == clientId) {
 
             StartCoroutine(SelectCardWindownInteraction(cardIds, isCancelable));
+        } else {
+            CardGameManager.Instance.WaitForResponse();
         }
     }
 
@@ -269,7 +277,7 @@ public class CardGameMultiplayer : NetworkBehaviour {
 
     public void SincResolveEffectServer(int cardEventId, EffectContext context) {
 
-        Debug.Log("SERVER ResolveEventId: " + cardEventId + " ResolvedCardID: "+ context.Source);
+        Debug.Log("SERVER ResolveEventId: " + cardEventId + " ResolvedCardID: "+ CardGameManager.Instance.GetCardFromLocalId(context.Source).GetCardSO().id + " ResolvedLocalID: " + context.Source);
         NewSincResolveEffectClientRpc(cardEventId, context);
     }
 
@@ -284,13 +292,25 @@ public class CardGameMultiplayer : NetworkBehaviour {
     public void NewSincResolveEffectClientRpc(int cardEventId, EffectContext context) {
 
         CardEvent cardEvent = CardGameManager.Instance.GetEventById(cardEventId, CardGameManager.Instance.GetCardFromLocalId(context.Source));
-        Debug.Log("CLIENT ResolveEventId: " + cardEventId + " ResolvedCardID: " + context.Source);
+        Debug.Log("CLIENT ResolveEventId: " + cardEventId + " ResolvedCardID: " + CardGameManager.Instance.GetCardFromLocalId(context.Source).GetCardSO().id + " ResolvedLocalID: " + context.Source);
         StartCoroutine(ChainSystem.Instance.ResolveEffectClient(cardEvent, context));
     }
 
     [Rpc(SendTo.Server)]
     public void ChangeTurnPlayerServerRpc() {
+        StartCoroutine(EndTurnSequenceServer());
+    }
 
+    public IEnumerator EndTurnSequenceServer() {
+        yield return CardGameManager.Instance.EndTurnSequence();
+        EventSystem.Instance.FinishEvent();
+
+        yield return null;
+
+        yield return new WaitUntil(() =>
+            !ChainSystem.Instance.buildingChain &&
+            !ChainSystem.Instance.resolvingChain
+        );
         turnPlayerId.Value = (turnPlayerId.Value == CardGameManager.Instance.player1.id) ? CardGameManager.Instance.player2.id : CardGameManager.Instance.player1.id;
     }
 
@@ -318,6 +338,18 @@ public class CardGameMultiplayer : NetworkBehaviour {
     private void ChainSystem_OnChainStateChangedClientRpc(bool buildingChain, bool resolvingChain) {
         ChainSystem.Instance.buildingChain = buildingChain;
         ChainSystem.Instance.resolvingChain = resolvingChain;
+    }
+
+    [Rpc(SendTo.Server)]
+    public void ChangePlayerToggleOnServerRpc(ulong playerId) {
+        CardGameManager.Instance.GetPlayerFromId(playerId).toggleOn = !CardGameManager.Instance.GetPlayerFromId(playerId).toggleOn;
+        ChangePlayerToggleOnClientRpc(playerId);
+        Debug.Log(CardGameManager.Instance.GetPlayerFromId(playerId).playerName + " + " + CardGameManager.Instance.GetPlayerFromId(playerId).toggleOn);
+    }
+    [Rpc(SendTo.ClientsAndHost)]
+    public void ChangePlayerToggleOnClientRpc(ulong playerId) {
+        CardGameManager.Instance.GetPlayerFromId(playerId).toggleOn = !CardGameManager.Instance.GetPlayerFromId(playerId).toggleOn;
+        Debug.Log(CardGameManager.Instance.GetPlayerFromId(playerId).playerName + " + " + CardGameManager.Instance.GetPlayerFromId(playerId).toggleOn);
     }
 
     public bool IsPlayerIndexConnected(int playerIndex) {
@@ -404,6 +436,12 @@ public class CardGameMultiplayer : NetworkBehaviour {
 
         StartCoroutine(ChainSystem.Instance.ActivateIgnition(CardGameManager.Instance.GetCardFromLocalId(ctx.Source), cardEvent, ctx, CardGameManager.Instance.GetCardFromLocalId(ctx.Source).Owner));
     }
+    [Rpc(SendTo.ClientsAndHost)]
+    public void ExecuteEventByIdClientRpc(int eventId, EffectContext ctx) {
+        CardEvent cardEvent = CardGameManager.Instance.GetEventById(eventId, CardGameManager.Instance.GetCardFromLocalId(ctx.Source));
+
+        StartCoroutine(cardEvent.effects.Execute(ctx));
+    }
 
     [Rpc(SendTo.Server)]
     public void SincDrawServerRpc(ulong playerId, int drawNumber) {
@@ -419,5 +457,10 @@ public class CardGameMultiplayer : NetworkBehaviour {
         EffectContext context = new() { Owner = playerId};
         DrawCardNode drawCard = new() { drawNumber = drawNumber };
         StartCoroutine(drawCard.Execute(context));
+    }
+
+    public void LeaveMatch() {
+        Instance = null;
+        SceneManager.MoveGameObjectToScene(gameObject, SceneManager.GetActiveScene());
     }
 }

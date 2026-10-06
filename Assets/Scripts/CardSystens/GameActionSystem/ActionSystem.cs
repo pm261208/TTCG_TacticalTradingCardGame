@@ -17,8 +17,8 @@ public class ActionSystem : Singleton<ActionSystem> {
     public IEnumerator Perform(GameAction action, Action callback = null) {
         queue.Enqueue((action, callback));
 
-        if (IsPerforming)
-            yield break;
+        if (IsPerforming) { 
+            yield break;}
 
         while (queue.Count > 0) {
             var (current, cb) = queue.Dequeue();

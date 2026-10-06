@@ -16,7 +16,7 @@ public class FieldVisual : MonoBehaviour{
          for (int collum = 0; collum < 5; collum++) {
             for (int row = 0; row < 5; row++) {
                 Tile tile = CardGameManager.Instance.field[collum, row];
-                float tileSpacingX = 1.2f;
+                float tileSpacingX = 1.3f;
                 float tileSpacingZ = 1.3f;
                 int tileCollum = int.Parse(tile.tileId.ToString()[1].ToString());
                 int tileRow = int.Parse(tile.tileId.ToString()[0].ToString());
@@ -52,7 +52,9 @@ public class FieldVisual : MonoBehaviour{
         if (fieldCards.Count == 0) return;
         for (int i = 0; i < fieldCards.Count; i++) {
 
-            Vector3 position = fieldTiles[i].transform.position + new Vector3(0, 0.11f, 0);
+            Vector3 position = fieldTiles[i].transform.position + new Vector3(0, 0.12f, 0);
+            if (fieldCards[i].isSet) position -= new Vector3(0, 0.01f, 0);
+
             fieldCards[i].transform.DOMove(position, duration);
             fieldCards[i].transform.DORotate(new(90, 0, 0), duration);
             if (!fieldCards[i].isSet) {

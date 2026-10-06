@@ -20,7 +20,7 @@ public abstract class PlayerInteraction {
     }
 
     protected void Finish() {
-        InteractionSystem.Instance.StartInteraction(null);
         IsFinished = true;
+        InteractionSystem.Instance.StartInteraction(null);
     }
 }

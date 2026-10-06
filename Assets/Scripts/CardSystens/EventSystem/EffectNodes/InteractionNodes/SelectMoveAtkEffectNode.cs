@@ -17,7 +17,7 @@ public class SelectMoveAtkEffectNode : EffectNode {
     public List<int> eventIndexs;
 
     public override IEnumerator Execute(EffectContext context) {
-        if (CardGameManager.Instance?.localPlayer.id == context.Owner) {
+        if (CardGameManager.Instance.localPlayer.id == context.Owner) {
             Card card = CardGameManager.Instance.GetCardFromLocalId(GetCardSubject(context)[0]);
 
             var interaction = new SelectMoveAtkInteraction(card, eventIndexs, card.GetMoveRange(), card.GetAtkRange(), true);

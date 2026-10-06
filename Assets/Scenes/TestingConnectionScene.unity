@@ -119,6 +119,188 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &388487670
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 388487672}
+  - component: {fileID: 388487671}
+  m_Layer: 0
+  m_Name: CardGameManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &388487671
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 388487670}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8152dac33639b3f4581c3df7dd6e1b99, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  hand1: []
+  hand2: []
+  deck1: []
+  deck2: []
+  gy1: []
+  gy2: []
+  deck1SO: {fileID: 11400000, guid: f14ba8bcc95a04846acf30df64cf3d24, type: 2}
+  deck2SO: {fileID: 0}
+  turnCount: 0
+  normalSummonCardEvent:
+    trigger: 
+    effects:
+      rid: 7108073946722598988
+    cost:
+      rid: -2
+    conditions: []
+    isOptional: 0
+    effectType: 0
+  moveCardEvent:
+    trigger: 
+    effects:
+      rid: 7108073946722598989
+    cost:
+      rid: -2
+    conditions: []
+    isOptional: 0
+    effectType: 0
+  atkCardEvent:
+    trigger: 
+    effects:
+      rid: 6788584458469769291
+    cost:
+      rid: -2
+    conditions: []
+    isOptional: 0
+    effectType: 0
+  atkPlayerCardEvent:
+    trigger: 
+    effects:
+      rid: 6788584458469769292
+    cost:
+      rid: -2
+    conditions: []
+    isOptional: 0
+    effectType: 0
+  setCardEvent:
+    trigger: 
+    effects:
+      rid: 6252988621861421128
+    cost:
+      rid: -2
+    conditions:
+    - rid: 6252988621861421129
+    isOptional: 0
+    effectType: 0
+  placeSpellTrapCardEvent:
+    trigger: 
+    effects:
+      rid: 6252988621861421130
+    cost:
+      rid: -2
+    conditions:
+    - rid: 6252988621861421131
+    isOptional: 0
+    effectType: 0
+  Card: {fileID: 3547584381672951898, guid: abf7fa0ad3972cb46b75530e0f43d759, type: 3}
+  Tile: {fileID: 5049893101171811407, guid: af42a16a1ae4cd14b9eb80d4ca203013, type: 3}
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 6252988621861421128
+      type: {class: SelectTileOnYourFieldNode, ns: , asm: Assembly-CSharp}
+      data:
+        nextEffect:
+          rid: 6252988621861421132
+        cardSubject: 
+    - rid: 6252988621861421129
+      type: {class: IsOnHandCondition, ns: , asm: Assembly-CSharp}
+      data: 
+    - rid: 6252988621861421130
+      type: {class: SelectTileOnYourFieldNode, ns: , asm: Assembly-CSharp}
+      data:
+        nextEffect:
+          rid: 6252988621861421133
+        cardSubject: 
+    - rid: 6252988621861421131
+      type: {class: IsOnHandCondition, ns: , asm: Assembly-CSharp}
+      data: 
+    - rid: 6252988621861421132
+      type: {class: SetCardNode, ns: , asm: Assembly-CSharp}
+      data:
+        nextEffect:
+          rid: -2
+        cardSubject: Source TargetTile
+    - rid: 6252988621861421133
+      type: {class: PlaceSpellTrapCardOnFieldNode, ns: , asm: Assembly-CSharp}
+      data:
+        nextEffect:
+          rid: 6252988621861421134
+        cardSubject: Source TargetTile
+    - rid: 6252988621861421134
+      type: {class: ActivateCardEventFromDataNode, ns: , asm: Assembly-CSharp}
+      data:
+        nextEffect:
+          rid: -2
+        cardSubject: eventIndex
+    - rid: 6788584458469769291
+      type: {class: AttackCardNode, ns: , asm: Assembly-CSharp}
+      data:
+        nextEffect:
+          rid: -2
+        cardSubject: 
+    - rid: 6788584458469769292
+      type: {class: AttackPlayerNode, ns: , asm: Assembly-CSharp}
+      data:
+        nextEffect:
+          rid: -2
+        cardSubject: 
+    - rid: 7108073946722598988
+      type: {class: SelectBacklineTileNode, ns: , asm: Assembly-CSharp}
+      data:
+        nextEffect:
+          rid: 7108073946722598990
+        cardSubject: Source
+    - rid: 7108073946722598989
+      type: {class: MoveCardNode, ns: , asm: Assembly-CSharp}
+      data:
+        nextEffect:
+          rid: -2
+        cardSubject: Source TargetTile
+    - rid: 7108073946722598990
+      type: {class: SummonCardNode, ns: , asm: Assembly-CSharp}
+      data:
+        nextEffect:
+          rid: -2
+        cardSubject: Source TargetTile
+--- !u!4 &388487672
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 388487670}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1090.6204, y: 515.4527, z: -0.06751005}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &637201549
 GameObject:
   m_ObjectHideFlags: 0
@@ -327,14 +509,14 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 769397651}
   m_Enabled: 1
-  serializedVersion: 11
+  serializedVersion: 13
   m_Type: 1
   m_Color: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
   m_Intensity: 1
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
-  m_CookieSize: 10
+  m_CookieSize2D: {x: 10, y: 10}
   m_Shadows:
     m_Type: 2
     m_Resolution: -1
@@ -379,7 +561,7 @@ Light:
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
   m_ForceVisible: 0
-  m_ShadowRadius: 0
+  m_ShapeRadius: 0
   m_ShadowAngle: 0
   m_LightUnit: 1
   m_LuxAtDistance: 1
@@ -411,17 +593,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Version: 3
   m_UsePipelineSettings: 1
   m_AdditionalLightsShadowResolutionTier: 2
-  m_LightLayerMask: 1
-  m_RenderingLayers: 1
   m_CustomShadowLayers: 0
-  m_ShadowLayerMask: 1
-  m_ShadowRenderingLayers: 1
   m_LightCookieSize: {x: 1, y: 1}
   m_LightCookieOffset: {x: 0, y: 0}
   m_SoftShadowQuality: 0
+  m_RenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_ShadowRenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_Version: 4
+  m_LightLayerMask: 1
+  m_ShadowLayerMask: 1
+  m_RenderingLayers: 1
+  m_ShadowRenderingLayers: 1
 --- !u!1 &864621532
 GameObject:
   m_ObjectHideFlags: 0
@@ -517,6 +705,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -621,6 +810,81 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!1 &1038568479
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1038568482}
+  - component: {fileID: 1038568481}
+  - component: {fileID: 1038568480}
+  m_Layer: 0
+  m_Name: CardGameMultiplayer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1038568480
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1038568479}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9ffd551eb832fe45ae923fb9b6f41dc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
+  matchID: 0
+  cardSODatabase: {fileID: 11400000, guid: f81c847a3ba6e0c44ba6a719a2264f35, type: 2}
+--- !u!114 &1038568481
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1038568479}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  GlobalObjectIdHash: 2778893257
+  InScenePlacedSourceGlobalObjectIdHash: 4238592090
+  m_InScenePlacedDisabledByDefault: 0
+  DeferredDespawnTick: 0
+  Ownership: 1
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 1
+  m_InScenePlaced: 1
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 0
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
+  SyncOwnerTransformWhenParented: 1
+  AllowOwnerToParent: 0
+--- !u!4 &1038568482
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1038568479}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1225259627
 GameObject:
   m_ObjectHideFlags: 0
@@ -749,6 +1013,7 @@ Canvas:
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
   m_VertexColorAlwaysGammaSpace: 0
+  m_UseReflectionProbes: 0
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
@@ -774,6 +1039,50 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!1 &1660224383
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1660224385}
+  - component: {fileID: 1660224384}
+  m_Layer: 0
+  m_Name: CardGameLobby
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1660224384
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1660224383}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ed2fe188b9d5674880e74e225c65161, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &1660224385
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1660224383}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1764705007
 GameObject:
   m_ObjectHideFlags: 0
@@ -853,6 +1162,50 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1834664592
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1834664594}
+  - component: {fileID: 1834664593}
+  m_Layer: 0
+  m_Name: MatchmakingClient
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1834664593
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1834664592}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a7f1f03b6d5e0f44852ece260af4674, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MatchmakingClient
+--- !u!4 &1834664594
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1834664592}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -861,3 +1214,7 @@ SceneRoots:
   - {fileID: 769397653}
   - {fileID: 1520763817}
   - {fileID: 1764705010}
+  - {fileID: 1660224385}
+  - {fileID: 388487672}
+  - {fileID: 1038568482}
+  - {fileID: 1834664594}

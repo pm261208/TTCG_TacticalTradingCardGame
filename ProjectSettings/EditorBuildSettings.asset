@@ -9,10 +9,16 @@ EditorBuildSettings:
     path: Assets/Scenes/BootScene.unity
     guid: 59c05531e96092048b7f83a7efbad4e5
   - enabled: 1
+    path: Assets/Scenes/MainMenuScene.unity
+    guid: cecc544d20198f3408afee9db99e4858
+  - enabled: 1
     path: Assets/Scenes/TestingConnectionScene.unity
     guid: 6ec594d0a9ec86341957010b6345b6e9
   - enabled: 1
     path: Assets/Scenes/DuelScene.unity
     guid: 99c9720ab356a0642a771bea13969a05
+  - enabled: 1
+    path: Assets/Scenes/DeckSelectScene.unity
+    guid: bc295c29f7a02d347bd0ec1599e24957
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

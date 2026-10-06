@@ -5,7 +5,7 @@ using SerializeReferenceEditor;
 
 [Serializable]
 public class CardEvent {
-    public TriggerType trigger;
+    public List<TriggerType> trigger = new();
     [SerializeReference]
     [SR]
     public EffectNode effects;

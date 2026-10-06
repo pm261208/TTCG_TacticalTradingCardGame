@@ -6,8 +6,10 @@ public static class Loader {
 
     public enum Scene {
         BootScene,
+        MainMenuScene,
         DuelScene,
         TestingConnectionScene,
+        DeckSelectScene,
     }
 
     private static Scene targetScene;

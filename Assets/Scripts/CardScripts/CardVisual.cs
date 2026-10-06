@@ -16,12 +16,17 @@ public class CardVisual : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
     [SerializeField] private TextMeshProUGUI descriptionText;
     [SerializeField] private Image background;
     [SerializeField] private Image border;
+    [SerializeField] private GameObject backBorder;
 
     [SerializeField] private GameObject cardVisualGO;
     [SerializeField] private GameObject cardBackVisualGO;
     [SerializeField] private GameObject starLevelContainer;
     [SerializeField] private GameObject atkContainer;
     [SerializeField] private GameObject hpContainer;
+
+    [SerializeField] private GameObject exStatsContainer;
+    [SerializeField] private TextMeshProUGUI exAtkText;
+    [SerializeField] private TextMeshProUGUI exHpText;
 
 
 
@@ -89,12 +94,38 @@ public class CardVisual : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
     public void UpdateBorder() {
         if (card.Owner != CardGameManager.Instance.localPlayer) {
             border.color = Color.red;
+        } else if (card.IsCardSelected()) {
+            border.color = Color.blue;
         } else if (card.AvailableEvents() > 0) {
             border.color = Color.yellow;
         } else if (card.AvailableNormalEvents() > 0) {
-            border.color = Color.blue;
+            border.color = Color.cyan;
         } else {
             border.color = Color.black;
+        }
+        UpdateBorderBack();
+        UpdateStatsIcon();
+    }
+
+    private void UpdateBorderBack() {
+        if (card.isSet && card.IsCardSelected()) {
+            backBorder.SetActive(true);
+        } else {
+            backBorder.SetActive(false);
+        }
+    }
+
+    private void UpdateStatsIcon() {
+        if (card.cardType == CardType.Monster) {
+            if (CardGameManager.Instance.IsCardInField(card)) {
+                exStatsContainer.SetActive(true);
+                exAtkText.text = ((MonsterCardData)card.cardData).cardAtk.ToString();
+                exHpText.text = ((MonsterCardData)card.cardData).cardHp.ToString();
+            } else {
+                exStatsContainer.SetActive(false);
+            }
+        } else{
+            exStatsContainer.SetActive(false);
         }
     }
 

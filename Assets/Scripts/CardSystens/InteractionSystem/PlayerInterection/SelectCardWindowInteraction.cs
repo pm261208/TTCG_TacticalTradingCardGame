@@ -38,15 +38,15 @@ public class SelectCardWindowInteraction : PlayerInteraction {
                 });
             } else {
                 selectedButton = button;
-                if (selectedButton is ActivateButton activateButton) {
+                if (selectedButton is ActivateButton) {
                     
                 }
-                if (selectedButton is CancelButton cancelButton) {
+                if (selectedButton is CancelButton) {
                     selectedCard = null;
                 }
                 Finish();
             }
-                
+            CardGameManager.Instance.UpdateCardsBorderVisual(); 
         }
     }
 

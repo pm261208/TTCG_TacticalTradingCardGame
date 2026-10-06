@@ -28,7 +28,7 @@ public class CardGameLobby : MonoBehaviour{
         public List<Lobby> lobbyList;
     }
 
-    private Lobby joinedLobby;
+    public Lobby joinedLobby;
     private float heartbeatTimer;
     private float listLobbiesTimer;
 
@@ -147,7 +147,7 @@ public class CardGameLobby : MonoBehaviour{
         }
     }
 
-    public async void CreateLobby(string lobbyName, bool isPrivate) {
+    public async Task CreateLobby(string lobbyName, bool isPrivate) {
         OnCreateLobbyStarted?.Invoke(this, EventArgs.Empty);
         try {
             joinedLobby = await LobbyService.Instance.CreateLobbyAsync(lobbyName, CardGameMultiplayer.MAX_PLAYER_AMOUNT, new CreateLobbyOptions {
@@ -167,7 +167,7 @@ public class CardGameLobby : MonoBehaviour{
             NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData(relayData);
 
             CardGameMultiplayer.Instance.StartServer();
-            Loader.LoadNetwork(Loader.Scene.TestingConnectionScene);
+            //Loader.LoadNetwork(Loader.Scene.TestingConnectionScene);
         } catch (LobbyServiceException e) {
             Debug.Log(e);
             OnCreateLobbyFailed?.Invoke(this, EventArgs.Empty);
@@ -266,5 +266,11 @@ public class CardGameLobby : MonoBehaviour{
             Debug.Log(e);
             OnJoinFailed?.Invoke(this, EventArgs.Empty);
         }
+    }
+
+    public void LeaveMatch() {
+        LeaveLobby();
+        Instance = null;
+        SceneManager.MoveGameObjectToScene(gameObject, SceneManager.GetActiveScene());
     }
 }

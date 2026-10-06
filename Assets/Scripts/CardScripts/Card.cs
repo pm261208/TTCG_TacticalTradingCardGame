@@ -61,6 +61,7 @@ public class Card : GameObjectBase {
         MonsterCardData monsterCardData = new() {
             cardStarLevel = monsterCard.starLevel,
             cardHp = monsterCard.hp,
+            cardMaxHp = monsterCard.hp,
             cardAtk = monsterCard.atk,
             movequant = 0,
             atkquant = 0,
@@ -85,8 +86,26 @@ public class Card : GameObjectBase {
 
     private void ProcessTrigger(TriggerType trigger, EffectContext ctx) {
         foreach (var evt in card.events) {
-            if (evt.trigger != trigger || evt.trigger == TriggerType.NoTrigger)
+            bool triggerCheck = false;
+
+            if (evt.trigger.Contains(trigger)) //&& evt.trigger != TriggerType.NoTrigger
+                triggerCheck = true;
+
+            if (cardType == CardType.Trap && isSet) { //&& evt.trigger == TriggerType.NoTrigger
+                if (evt.effectType == EffectTypes.ignitionResponse || evt.effectType == EffectTypes.response) {
+                    if (trigger == TriggerType.OnEffectActivate || trigger == TriggerType.OnSummon || trigger == TriggerType.OnTurnStart || trigger == TriggerType.OnTurnEnd) {
+                        triggerCheck = true;
+                    }
+                }
+            }
+
+            if (!Owner.toggleOn && evt.isOptional) {
+                triggerCheck = false;
+            }
+
+            if (!triggerCheck) {
                 continue;
+            }
 
             bool valid = true;
 
@@ -101,10 +120,19 @@ public class Card : GameObjectBase {
                 continue;
 
             ctx.Owner = Owner.id;
-            if (evt.effectType == EffectTypes.doesNotStartChain) { 
-                StartCoroutine(evt.effects.Execute(ctx));
+            if (evt.effectType == EffectTypes.doesNotStartChain) {
+                //StartCoroutine(evt.effects.Execute(ctx));
+                ChainSystem.Instance.RegisterPendingPassive(
+                        new PendingEffect {
+                            source = this,
+                            context = new() { Source = cardId, Owner = Owner.id, eventData = ctx.eventData },
+                            cardEvent = evt,
+                            triggerType = trigger,
+                            owner = Owner
+                        }
+                    );
 
-            }else if (evt.effectType == EffectTypes.ignition) {
+            } else if (evt.effectType == EffectTypes.ignition) {
                 StartCoroutine(ChainSystem.Instance.ActivateIgnition(this, evt, new() { Source = cardId, Owner = Owner.id, eventData = ctx.eventData }, Owner));
 
             }else if (evt.effectType == EffectTypes.ignitionResponse) {
@@ -112,21 +140,31 @@ public class Card : GameObjectBase {
                     ChainSystem.Instance.RegisterPendingResponse(
                         new PendingEffect {
                             source = this,
-                            context = new() { Source = cardId, Owner = Owner.id ,eventData = ctx.eventData },
+                            context = new() { Source = cardId, Owner = Owner.id, eventData = ctx.eventData },
                             cardEvent = evt,
+                            triggerType = trigger,
                             owner = Owner
                         }
                     );
                 } else {
-                    StartCoroutine(ChainSystem.Instance.ActivateIgnition(this, evt, ctx, Owner));
+                    ChainSystem.Instance.RegisterPendingEffect(
+                        new PendingEffect {
+                            source = this,
+                            context = new() { Source = cardId, Owner = Owner.id, eventData = ctx.eventData },
+                            cardEvent = evt,
+                            triggerType = trigger,
+                            owner = Owner
+                        }
+                    );
                 }
-            }else if (evt.effectType == EffectTypes.response) {
+            } else if (evt.effectType == EffectTypes.response) {
                 if (ChainSystem.Instance.buildingChain) {
                     ChainSystem.Instance.RegisterPendingResponse(
                         new PendingEffect {
                             source = this,
                             context = new() { Source = cardId, Owner = Owner.id, eventData = ctx.eventData },
                             cardEvent = evt,
+                            triggerType = trigger,
                             owner = Owner
                         }
                     );
@@ -138,6 +176,7 @@ public class Card : GameObjectBase {
                         source = this,
                         context = new() { Source = cardId, Owner = Owner.id, eventData = ctx.eventData },
                         cardEvent = evt,
+                        triggerType = trigger,
                         owner = Owner
                     }
                 );
@@ -153,6 +192,7 @@ public class Card : GameObjectBase {
             EffectContext context = new(){ Source = cardId, Owner = Owner.id };
 
             SelectCard(context);
+            CardHoverSystem.instance.Show(this);
         }
     }
 
@@ -168,6 +208,7 @@ public class Card : GameObjectBase {
                 SelectTrapCard(context);
                 break;
         }
+        GetComponent<CardVisual>().UpdateBorder();
     }
 
     private void SelectMonsterCard(EffectContext context) {
@@ -282,6 +323,7 @@ public class Card : GameObjectBase {
             }
             if (!isAble) continue;
             if ((cardEvent.effectType == EffectTypes.ignition || cardEvent.effectType == EffectTypes.ignitionResponse) && CardGameManager.Instance.turnPlayer != Owner) continue;
+            if (cardEvent.effectType == EffectTypes.doesNotStartChain) continue;
 
             eventCount++;
         }
@@ -320,6 +362,29 @@ public class Card : GameObjectBase {
                 { eventCount++; }
         }
         return eventCount;
+    }
+
+    public bool IsCardSelected() {
+        if (InteractionSystem.Instance.currentInteraction == null) return false;
+        if (InteractionSystem.Instance.currentInteraction.IsFinished) return false;
+
+        if (InteractionSystem.Instance.currentInteraction is SelectCardEffectInteraction interactionEffect) {
+
+            if(interactionEffect.selectedCard == this) 
+                return true;
+        }
+        if (InteractionSystem.Instance.currentInteraction is SelectMoveAtkInteraction interactionMoveAtk) {
+
+            if (interactionMoveAtk.selectedCard == this)
+                return true;
+        }
+        if (InteractionSystem.Instance.currentInteraction is SelectCardWindowInteraction interactionWindown) {
+
+            if (interactionWindown.selectedCard == this)
+                return true;
+        }
+
+        return false;
     }
 
     public void ShowInteractions(List<int> interactions) {
@@ -368,7 +433,7 @@ public class Card : GameObjectBase {
         List<int> moveRange = new();
 
         Tile tile = CardGameManager.Instance.GetTileWCard(this);
-        foreach (int n in ((MonsterCardSO)card).moveRange) {
+        foreach (int n in RangeManager.GetRange(((MonsterCardSO)card).moveRange)) {
             moveRange.Add(tile.tileId + n);
         }
         return moveRange;
@@ -377,7 +442,7 @@ public class Card : GameObjectBase {
         List<int> atkRange = new();
 
         Tile tile = CardGameManager.Instance.GetTileWCard(this);
-        foreach (int n in ((MonsterCardSO)card).atkRange) {
+        foreach (int n in RangeManager.GetRange(((MonsterCardSO)card).atkRange)) {
             int tileId = tile.tileId + n;
             atkRange.Add(tileId);
             if (Owner == CardGameManager.Instance.player1) {

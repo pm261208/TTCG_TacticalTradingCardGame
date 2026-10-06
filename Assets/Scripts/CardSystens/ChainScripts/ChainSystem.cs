@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Unity.Netcode;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.UIElements;
 using static Unity.VisualScripting.Member;
 using static UnityEngine.Rendering.GPUSort;
 
@@ -13,8 +14,10 @@ public class ChainSystem : Singleton<ChainSystem> {
 
     private List<PendingEffect> pendingEffects = new();
     private List<PendingEffect> pendingResponses = new();
+    private List<PendingEffect> pendingPassives = new();
 
     private Stack<ChainLink> currentChain = new();
+
 
     public bool resolvingChain = false;
     public bool buildingChain = false;
@@ -39,14 +42,103 @@ public class ChainSystem : Singleton<ChainSystem> {
 
     }
 
+    public void RegisterPendingPassive(PendingEffect effect) {
+
+        pendingPassives.Add(effect);
+
+    }
+
+    // =========================
+    // PROCESSA OS EFEITOS PASSIVOS
+    // =========================
+
+    public IEnumerator ProcessPendingPassiveEffects() {
+        
+        if (pendingPassives.Count == 0) 
+            yield break;
+        yield return ResolvePassives();
+    }
+
+    // =========================
+    // RESOLVE OS EFEITOS PASSIVOS
+    // =========================
+
+    private IEnumerator ResolvePassives() {
+        buildingChain = true;
+        CardGameMultiplayer.Instance.OnChainStateChanged();
+
+        List<PendingEffect> mandatoryEffects = new();
+        List<PendingEffect> mandatoryOponentEffects = new();
+        List<PendingEffect> optionalEffects = new();
+        List<PendingEffect> optionalOponentEffects = new();
+
+        Player turnPlayer = CardGameManager.Instance.turnPlayer;
+        Player oponentPlayer = (turnPlayer == CardGameManager.Instance.player1) ? CardGameManager.Instance.player2 : CardGameManager.Instance.player1;
+        foreach (var effect in pendingPassives) {
+
+            if (effect.owner == turnPlayer) {
+                if (effect.cardEvent.isOptional) {
+                    optionalEffects.Add(effect);
+                } else {
+                    mandatoryEffects.Add(effect);
+                }
+            } else {
+                if (effect.cardEvent.isOptional) {
+                    optionalOponentEffects.Add(effect);
+                } else {
+                    mandatoryOponentEffects.Add(effect);
+                }
+            }
+        }
+        pendingPassives.Clear();
+
+        while (mandatoryEffects.Count != 0) {
+
+            yield return mandatoryEffects[0].cardEvent.effects.Execute(mandatoryEffects[0].context);
+            CardGameMultiplayer.Instance.ExecuteEventByIdClientRpc(CardGameManager.Instance.GetEventIndex(mandatoryEffects[0].context.Source, mandatoryEffects[0].cardEvent), mandatoryEffects[0].context);
+            mandatoryEffects.RemoveAt(0);
+            EvaluatePendingEffects(mandatoryEffects);
+
+        }
+        while (mandatoryOponentEffects.Count != 0) {
+
+            yield return mandatoryOponentEffects[0].cardEvent.effects.Execute(mandatoryOponentEffects[0].context);
+            CardGameMultiplayer.Instance.ExecuteEventByIdClientRpc(CardGameManager.Instance.GetEventIndex(mandatoryOponentEffects[0].context.Source, mandatoryOponentEffects[0].cardEvent), mandatoryOponentEffects[0].context);
+            mandatoryOponentEffects.RemoveAt(0);
+            EvaluatePendingEffects(mandatoryOponentEffects);
+        }
+        while (optionalEffects.Count != 0) {
+
+            yield return optionalEffects[0].cardEvent.effects.Execute(optionalEffects[0].context);
+            CardGameMultiplayer.Instance.ExecuteEventByIdClientRpc(CardGameManager.Instance.GetEventIndex(optionalEffects[0].context.Source, optionalEffects[0].cardEvent), optionalEffects[0].context);
+            optionalEffects.RemoveAt(0);
+            EvaluatePendingEffects(optionalEffects);
+
+        }
+        while (optionalOponentEffects.Count != 0) {
+
+            yield return optionalOponentEffects[0].cardEvent.effects.Execute(optionalOponentEffects[0].context);
+            CardGameMultiplayer.Instance.ExecuteEventByIdClientRpc(CardGameManager.Instance.GetEventIndex(optionalOponentEffects[0].context.Source, optionalOponentEffects[0].cardEvent), optionalOponentEffects[0].context);
+            optionalOponentEffects.RemoveAt(0);
+            EvaluatePendingEffects(optionalOponentEffects);
+
+        }
+
+        buildingChain = false;
+        CardGameMultiplayer.Instance.OnChainStateChanged();
+    }
+
     // =========================
     // EVENTO TERMINOU
     // =========================
 
     public void ProcessPendingEffects() {
 
-        if (pendingEffects.Count == 0)
+        if (pendingEffects.Count == 0) {
+            StartCoroutine(ProcessPendingPassiveEffects());
             return;
+        }
+            
         StartCoroutine(BuildChain());
     }
 
@@ -106,8 +198,10 @@ public class ChainSystem : Singleton<ChainSystem> {
             yield return ActivateCardEffect(mandatoryEffect.cardEvent, newContext);
 
             AddChainLink(mandatoryEffect);
+
             EvaluatePendingEffects(mandatoryEffects);
             yield return Responses(turnPlayer);
+            EvaluatePendingEffects(mandatoryEffects);
 
         }
         while (mandatoryOponentEffects.Count != 0) {
@@ -128,9 +222,10 @@ public class ChainSystem : Singleton<ChainSystem> {
             yield return ActivateCardEffect(mandatoryEffect.cardEvent, newContext);
 
             AddChainLink(mandatoryEffect);
-            EvaluatePendingEffects(mandatoryOponentEffects);
-            yield return Responses(oponentPlayer);
 
+            EvaluatePendingEffects(mandatoryEffects);
+            yield return Responses(oponentPlayer);
+            EvaluatePendingEffects(mandatoryEffects);
         }
         while (optionalEffects.Count != 0) {
             List<Card> cards = optionalEffects.Select(e => e.source).ToList();
@@ -150,8 +245,10 @@ public class ChainSystem : Singleton<ChainSystem> {
                 yield return ActivateCardEffect(optionalEffect.cardEvent, newContext);
 
                 AddChainLink(optionalEffect);
+
                 EvaluatePendingEffects(optionalEffects);
                 yield return Responses(turnPlayer);
+                EvaluatePendingEffects(optionalEffects);
             } else {
                 optionalEffects.Clear();
             }
@@ -175,8 +272,10 @@ public class ChainSystem : Singleton<ChainSystem> {
                 yield return ActivateCardEffect(optionalEffect.cardEvent, newContext);
 
                 AddChainLink(optionalEffect);
+
                 EvaluatePendingEffects(optionalOponentEffects);
                 yield return Responses(oponentPlayer);
+                EvaluatePendingEffects(optionalOponentEffects);
             } else {
                 optionalOponentEffects.Clear();
             }
@@ -189,8 +288,11 @@ public class ChainSystem : Singleton<ChainSystem> {
     }
 
     public IEnumerator ActivateIgnition(Card source, CardEvent cardEvent, EffectContext context, Player owner) {
-        buildingChain = true;
-        CardGameMultiplayer.Instance.OnChainStateChanged();
+        if (CardGameMultiplayer.Instance.IsServer) {
+            buildingChain = true;
+            CardGameMultiplayer.Instance.OnChainStateChanged();
+        }
+        
         pendingResponses.Clear();
         Player oponentPlayer = (owner == CardGameManager.Instance.player1) ? CardGameManager.Instance.player2 : CardGameManager.Instance.player1;
 
@@ -218,8 +320,10 @@ public class ChainSystem : Singleton<ChainSystem> {
 
         yield return Responses(oponentPlayer);
 
-        buildingChain = false;
-        CardGameMultiplayer.Instance.OnChainStateChanged();
+        if (CardGameMultiplayer.Instance.IsServer) {
+            buildingChain = false;
+            CardGameMultiplayer.Instance.OnChainStateChanged();
+        }
         StartCoroutine(ResolveChain());
     }
 
@@ -245,6 +349,8 @@ public class ChainSystem : Singleton<ChainSystem> {
     private void EvaluatePendingEffects(List<PendingEffect> effects) {
         for (int i = 0; i < effects.Count; i++) {
             if (!effects[i].source.EvaluateEvent(effects[i].cardEvent)) {
+                effects.RemoveAt(i);
+            }else if (effects[i].cardEvent.effectType == EffectTypes.response || effects[i].cardEvent.effectType == EffectTypes.ignitionResponse) {
                 effects.RemoveAt(i);
             }
         }
@@ -383,7 +489,7 @@ public class ChainSystem : Singleton<ChainSystem> {
             Source = card.cardId,
         };
 
-        EventSystem.Instance.RaiseEvent(TriggerType.OnEffectActvate, newContext);
+        EventSystem.Instance.RaiseEvent(TriggerType.OnEffectActivate, newContext);
 
     }
 
@@ -398,9 +504,10 @@ public class ChainSystem : Singleton<ChainSystem> {
             yield break;
         }
 
-
-        resolvingChain = true;
-        CardGameMultiplayer.Instance.OnChainStateChanged();
+        if (CardGameMultiplayer.Instance.IsServer) {
+            resolvingChain = true;
+            CardGameMultiplayer.Instance.OnChainStateChanged();
+        }
 
         while (currentChain.Count > 0) {
 
@@ -416,10 +523,14 @@ public class ChainSystem : Singleton<ChainSystem> {
             );
         }
 
-        resolvingChain = false;
-        CardGameMultiplayer.Instance.OnChainStateChanged();
+        if (CardGameMultiplayer.Instance.IsServer) {
+            resolvingChain = false;
+            CardGameMultiplayer.Instance.OnChainStateChanged();
+        }
 
         Debug.Log("Chain Finished");
+        yield return ProcessPendingPassiveEffects();
+        EventSystem.Instance.FinishEvent();
     }
 
     // =========================
@@ -470,7 +581,6 @@ public class ChainSystem : Singleton<ChainSystem> {
                     new SendCardToGYGA(link.source)
             ));
             CardGameManager.Instance.UpdateCardsBorderVisual();
-            EventSystem.Instance.FinishEvent();
         } 
     }
     

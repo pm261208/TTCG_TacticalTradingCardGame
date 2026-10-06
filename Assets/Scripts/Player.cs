@@ -10,4 +10,5 @@ public class Player{
 
     public int starMana;
     public int lp;
+    public bool toggleOn;
 }

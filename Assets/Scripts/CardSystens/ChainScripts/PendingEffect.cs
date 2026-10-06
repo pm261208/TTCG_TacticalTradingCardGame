@@ -6,5 +6,6 @@ public class PendingEffect {
     public CardEvent cardEvent;
     public EffectContext context;
 
+    public TriggerType triggerType;
     public Player owner;
 }

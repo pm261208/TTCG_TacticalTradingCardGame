@@ -19,6 +19,14 @@ public class CardGameManager : MonoBehaviour{
     public event EventHandler OnTurnChage;
     public event EventHandler OnManaChanged;
     public event EventHandler OnLifePointsChanged;
+    public event EventHandler OnWaintingForResponse;
+    public event EventHandler<OnMatchEndEventArgs> OnMatchEnd;
+    public event EventHandler OnMatchLeave;
+
+    public class OnMatchEndEventArgs : EventArgs {
+        public Player winner;
+        public Player loser;
+    }
 
     public Player localPlayer;
     public Player player1;
@@ -80,6 +88,7 @@ public class CardGameManager : MonoBehaviour{
                 nextEffect = new ActivateCardEventFromDataNode { cardSubject = "eventIndex" }
             }
         },
+        conditions = new List<EventCondition> { new IsOnHandCondition() }
     };
 
     [SerializeField] private GameObject Card;
@@ -198,6 +207,8 @@ public class CardGameManager : MonoBehaviour{
 
         player1.lp = 8;
         player2.lp = 8;
+        player1.toggleOn = true;
+        player2.toggleOn = true;
 
         OnPlayerSet?.Invoke(this, EventArgs.Empty);
     }
@@ -210,6 +221,8 @@ public class CardGameManager : MonoBehaviour{
         }
         player1.lp = 8;
         player2.lp = 8;
+        player1.toggleOn = true;
+        player2.toggleOn = true;
 
         foreach (CardSO cardSO in deck1SO.Deck) {
             GameObject cardTransform = Instantiate(Card);
@@ -269,7 +282,7 @@ public class CardGameManager : MonoBehaviour{
         CardGameMultiplayer.Instance.PlayerMatchDataSincServerRpc();
     }
 
-    public void StartMatchT() {
+    public void StartMatch() {
         DrawCardGA initialdrawCardGA = new(5, player1);
         StartCoroutine(ActionSystem.Instance.Perform(initialdrawCardGA));
         DrawCardGA drawCardGA = new(5, player2);
@@ -421,6 +434,18 @@ public class CardGameManager : MonoBehaviour{
         }
         return null;
     }
+    public IEnumerator EndTurnSequence() {
+        EventSystem.Instance.RaiseEvent(TriggerType.OnTurnEnd, new());
+
+        EventSystem.Instance.FinishEvent();
+
+        yield return null;
+
+        yield return new WaitUntil(() =>
+            !ChainSystem.Instance.buildingChain &&
+            !ChainSystem.Instance.resolvingChain
+        );
+    }
 
     public void ChangeTurn(ulong playerId) {
         if (playerId == player1.id) {
@@ -458,6 +483,10 @@ public class CardGameManager : MonoBehaviour{
             turnPlayer = player2;
         }
         turnCount = 1;
+    }
+
+    public void WaitForResponse() {
+        OnWaintingForResponse?.Invoke(this, EventArgs.Empty);
     }
 
     public int GetEventIndex(int cardId, CardEvent cardEvent) {
@@ -500,7 +529,10 @@ public class CardGameManager : MonoBehaviour{
         } else if (eventId == 94) {
             return placeSpellTrapCardEvent;
         }else {
-            return card.GetCardSO().events[eventId];
+            if (eventId < card.GetCardSO().events.Count || eventId == -1) 
+                return card.GetCardSO().events[eventId];
+            Debug.LogError(eventId+ " id não compativel");
+            return card.GetCardSO().events[0];
         }
     }
 
@@ -601,8 +633,26 @@ public class CardGameManager : MonoBehaviour{
             player2.lp += lifePoints;
         }
         OnLifePointsChanged?.Invoke(this, EventArgs.Empty);
+        if(player1.lp <= 0) {
+            FinishGame(player2, player1);
+        } else if (player2.lp <= 0) {
+            FinishGame(player1, player2);
+        }
+    }
+
+    private void FinishGame(Player winner, Player loser) {
+        OnMatchEnd?.Invoke(this, new OnMatchEndEventArgs { winner = winner, loser = loser });
     }
     
+    public IEnumerator LeaveMatch() {
+        OnMatchLeave?.Invoke(this, EventArgs.Empty);
+        Instance = null;
+        SceneManager.MoveGameObjectToScene(gameObject, SceneManager.GetActiveScene());
+        CardGameMultiplayer.Instance.LeaveMatch();
+        CardGameLobby.Instance.LeaveMatch();
+        yield return new WaitForSeconds(0.5f);
+        Loader.Load(Loader.Scene.BootScene);
+    }
     private void OnDisable() {
         CardGameMultiplayer.Instance.OnLoadEventCompleted -= CardGameMultiplayer_OnLoadEventCompleted;
     }

@@ -12,7 +12,8 @@ public class EventSystem : Singleton<EventSystem> {
 
 
 
-    public void RaiseEvent(TriggerType trigger, EffectContext ctx) {    
+    public void RaiseEvent(TriggerType trigger, EffectContext ctx) {
+        if (!CardGameMultiplayer.Instance.IsServer) return;
         OnProcessTriger?.Invoke(this, new OnProcessTrigerEventArgs {
             trigger = trigger,
             ctx = ctx
@@ -24,6 +25,7 @@ public class EventSystem : Singleton<EventSystem> {
     }
 
     public void FinishEvent() {
+        if (!CardGameMultiplayer.Instance.IsServer) return;
         ChainSystem.Instance.ProcessPendingEffects();
     }
 }

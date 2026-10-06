@@ -22,8 +22,8 @@ MonoBehaviour:
   starLevel: 1
   atk: 1
   hp: 2
-  moveRange: 01000000ffffffff0a000000f6ffffff0b000000f5ffffff09000000f7ffffff
-  atkRange: 01000000ffffffff0a000000f6ffffff0b000000f5ffffff09000000f7ffffff
+  moveRange: R2
+  atkRange: R2
   references:
     version: 2
     RefIds:
@@ -32,7 +32,7 @@ MonoBehaviour:
     - rid: 6788584277533261918
       type: {class: CardEvent, ns: , asm: Assembly-CSharp}
       data:
-        trigger: 0
+        trigger: 00000000
         effects:
           rid: 6788584277533261922
         cost:

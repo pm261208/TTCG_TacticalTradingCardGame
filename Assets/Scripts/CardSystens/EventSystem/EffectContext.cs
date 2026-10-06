@@ -9,6 +9,7 @@ public class EffectContext : INetworkSerializable{
     public int TargetCard;
     public int TargetTile;
 
+    public TriggerType activationTrigger;
     public EventData eventData;
 
     public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter {

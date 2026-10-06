@@ -9,10 +9,11 @@ using UnityEngine.UI;
 public class CardHoverSystem : MonoBehaviour{
 
     [SerializeField] private GameObject visual;
-    [SerializeField] private new TextMeshProUGUI name;
+    [SerializeField] private TextMeshProUGUI cardName;
     [SerializeField] private TextMeshProUGUI starLevel;
     [SerializeField] private TextMeshProUGUI power;
     [SerializeField] private TextMeshProUGUI hp;
+    [SerializeField] private TextMeshProUGUI maxHp;
     [SerializeField] private TextMeshProUGUI description;
     [SerializeField] private GameObject starLevelContainer;
     [SerializeField] private GameObject atkContainer;
@@ -46,7 +47,7 @@ public class CardHoverSystem : MonoBehaviour{
         hoveredCard = card;
 
         visual.SetActive(true);
-        name.text = card.cardName;
+        cardName.text = card.cardName;
         description.text = card.cardDescription;
         cardVisual.SetUp(card);
         switch (card.GetCardSO().cardType) {
@@ -70,6 +71,7 @@ public class CardHoverSystem : MonoBehaviour{
         starLevel.text = monsterHoveredCardData.cardStarLevel.ToString();
         power.text = monsterHoveredCardData.cardAtk.ToString();
         hp.text = monsterHoveredCardData.cardHp.ToString();
+        maxHp.text = monsterHoveredCardData.cardMaxHp.ToString();
 
         starLevelContainer.SetActive(true);
         atkContainer.SetActive(true);

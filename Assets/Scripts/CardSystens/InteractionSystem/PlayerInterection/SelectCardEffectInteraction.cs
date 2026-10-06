@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class SelectCardEffectInteraction : PlayerInteraction{
 
-    private Card selectedCard;
+    public Card selectedCard;
     private List<int> EffectIndexs;
     public CardEvent SelectedEvent {  get; private set; }
     public int? SelectedMainSpellTrapEvent {  get; private set; }
@@ -50,6 +50,7 @@ public class SelectCardEffectInteraction : PlayerInteraction{
     }
 
     public override void OnExit() {
+        CardGameManager.Instance.UpdateCardsBorderVisual();
         selectedCard.HideInteractions();
     }
 }
